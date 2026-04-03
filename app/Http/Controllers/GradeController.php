@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Grade;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class GradeController extends Controller
+{
+    /**
+     * Afficher la liste des grades.
+     */
+    public function index(Request $request)
+    {
+        $query = Grade::query();
+
+        // Filtre par recherche
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nom_grade', 'like', "%{$search}%")
+                  ->orWhere('code_grade', 'like', "%{$search}%")
+                  ->orWhere('type_grade', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtre par type
+        if ($request->filled('type')) {
+            $query->where('type_grade', $request->type);
+        }
+
+        $grades = $query->orderBy('ordre')
+            ->paginate(20)
+            ->withQueryString()
+            ->through(fn ($grade) => [
+                'id' => $grade->id,
+                'code_grade' => $grade->code_grade,
+                'nom_grade' => $grade->nom_grade,
+                'type_grade' => $grade->type_grade,
+                'ordre' => $grade->ordre,
+                'effectif_actif' => $grade->militaires()->where('statut', 'actif')->count(),
+                'effectif_total' => $grade->militaires()->count(),
+            ]);
+
+        // Statistiques globales
+        $statistiques = [
+            'total_grades' => Grade::count(),
+            'types_grades' => Grade::distinct('type_grade')->count('type_grade'),
+            'total_militaires' => \App\Models\Militaire::where('statut', 'actif')->count(),
+        ];
+
+        // Options pour les filtres
+        $typesGrades = Grade::distinct('type_grade')
+            ->pluck('type_grade')
+            ->map(fn ($type) => ['label' => $type, 'value' => $type])
+            ->toArray();
+
+        return Inertia::render('grades/index', [
+            'grades' => $grades,
+            'statistiques' => $statistiques,
+            'filters' => $request->only(['search', 'type']),
+            'typesGrades' => $typesGrades,
+        ]);
+    }
+
+    /**
+     * Afficher les détails d'un grade.
+     */
+    public function show(Request $request, Grade $grade)
+    {
+        // Récupérer les militaires ayant ce grade
+        $militaires = $grade->militaires()
+            ->where('statut', 'actif')
+            ->orderBy('nom')
+            ->orderBy('prenom')
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn ($militaire) => [
+                'id' => $militaire->id,
+                'matricule' => $militaire->matricule,
+                'nom' => $militaire->nom,
+                'prenom' => $militaire->prenom,
+                'date_entree_service' => $militaire->date_entree_service?->format('d/m/Y'),
+                'date_retraite' => $militaire->date_retraite?->format('d/m/Y'),
+                'specialite' => $militaire->specialite,
+                'age' => $militaire->age,
+                'anciennete' => $militaire->anciennete,
+            ]);
+
+        // Statistiques du grade
+        $effectif_total = $grade->militaires()->count();
+        $effectif_actif = $grade->militaires()->where('statut', 'actif')->count();
+        $effectif_retraite = $grade->militaires()->where('statut', 'retraité')->count();
+
+        return Inertia::render('grades/show', [
+            'grade' => [
+                'id' => $grade->id,
+                'code_grade' => $grade->code_grade,
+                'nom_grade' => $grade->nom_grade,
+                'type_grade' => $grade->type_grade,
+                'ordre' => $grade->ordre,
+                'description' => $grade->description,
+            ],
+            'militaires' => $militaires,
+            'statistiques' => [
+                'effectif_total' => $effectif_total,
+                'effectif_actif' => $effectif_actif,
+                'effectif_retraite' => $effectif_retraite,
+            ],
+        ]);
+    }
+}
