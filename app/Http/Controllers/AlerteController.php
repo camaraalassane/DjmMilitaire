@@ -16,7 +16,7 @@ class AlerteController extends Controller
         $query = Alerte::with('militaire');
 
         // Filtre par type
-        if ($request->filled('type')) {
+        if ($request->filled('type')) { 
             $query->where('type_alerte', $request->type);
         }
 

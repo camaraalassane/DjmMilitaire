@@ -20,7 +20,8 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
-
+Route::get('dashboard/export-proposables-annee-n', [DashboardController::class, 'exportProposablesAnneeN'])->name('dashboard.export-proposables-annee-n');
+Route::get('dashboard/export-proposables-annee-n1', [DashboardController::class, 'exportProposablesAnneeN1'])->name('dashboard.export-proposables-annee-n1');
 // Route pour marquer une alerte comme vue
 Route::post('/alertes/{alerte}/marquer-vue', [DashboardController::class, 'marquerAlerteVue'])
     ->middleware(['auth'])

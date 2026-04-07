@@ -9,7 +9,7 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <!-- Statistiques Cards -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
                             <Card v-for="stat in statistiquesCards" :key="stat.label" :class="stat.colorClass" class="text-white">
                                 <template #title>
                                     <div class="flex items-center gap-2">
@@ -19,6 +19,160 @@
                                 </template>
                                 <template #content>
                                     <div class="text-3xl font-bold">{{ stat.value }}</div>
+                                </template>
+                            </Card>
+                        </div>
+
+                        <!-- Tableau Année N -->
+                        <div class="mb-12">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Militaires proposables pour l'année {{ anneeN }}</h3>
+                                    <p class="text-sm text-gray-500">Périodes: Janvier, Avril et Octobre</p>
+                                </div>
+                                <Button label="Exporter en Excel" 
+                                        icon="pi pi-file-excel" 
+                                        class="p-button-success p-button-sm"
+                                        @click="exportProposablesAnneeN" />
+                            </div>
+                            
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2">
+                                        <i class="pi pi-calendar text-blue-500"></i>
+                                        <span>Liste des propositions - Année {{ anneeN }}</span>
+                                        <Tag :value="totalProposablesN" severity="warning" />
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <DataTable :value="allProposablesN" 
+                                               stripedRows 
+                                               responsiveLayout="scroll"
+                                               class="p-datatable-sm"
+                                               :rows="10"
+                                               paginator
+                                               :rowsPerPageOptions="[10, 20, 50, 100]"
+                                               sortField="date_proposition"
+                                               :sortOrder="1">
+                                        <Column field="periode" header="Période" sortable>
+                                            <template #body="slotProps">
+                                                <span :class="getPeriodeColor(slotProps.data.periode_key)">
+                                                    {{ slotProps.data.periode }}
+                                                </span>
+                                            </template>
+                                        </Column>
+                                        <Column field="date_proposition_formatted" header="Date proposition" sortable>
+                                            <template #body="slotProps">
+                                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                                    <i class="pi pi-calendar"></i>
+                                                    <span>{{ slotProps.data.date_proposition_formatted }}</span>
+                                                </div>
+                                            </template>
+                                        </Column>
+                                        <Column field="matricule" header="Matricule" sortable>
+                                            <template #body="slotProps">
+                                                <Tag :value="slotProps.data.matricule" severity="info" />
+                                            </template>
+                                        </Column>
+                                        <Column field="nom_complet" header="Nom" sortable>
+                                            <template #body="slotProps">
+                                                <div class="font-medium whitespace-nowrap">{{ slotProps.data.nom_complet }}</div>
+                                            </template>
+                                        </Column>
+                                        <Column field="grade_actuel" header="Grade actuel" sortable>
+                                            <template #body="slotProps">
+                                                <span class="whitespace-nowrap">{{ slotProps.data.grade_actuel }}</span>
+                                            </template>
+                                        </Column>
+                                        <Column field="grade_cible" header="Grade cible" sortable>
+                                            <template #body="slotProps">
+                                                <Tag :value="slotProps.data.grade_cible" severity="success" />
+                                            </template>
+                                        </Column>
+                                        <template #empty>
+                                            <div class="text-center p-8 text-gray-500">
+                                                <i class="pi pi-info-circle text-4xl mb-2"></i>
+                                                <p>Aucun militaire proposable pour l'année {{ anneeN }}</p>
+                                            </div>
+                                        </template>
+                                    </DataTable>
+                                </template>
+                            </Card>
+                        </div>
+
+                        <!-- Tableau Année N+1 -->
+                        <div class="mb-12">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Militaires proposables pour l'année {{ anneeN1 }}</h3>
+                                    <p class="text-sm text-gray-500">Périodes: Janvier, Avril et Octobre</p>
+                                </div>
+                                <Button label="Exporter en Excel" 
+                                        icon="pi pi-file-excel" 
+                                        class="p-button-success p-button-sm"
+                                        @click="exportProposablesAnneeN1" />
+                            </div>
+                            
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2">
+                                        <i class="pi pi-calendar-plus text-purple-500"></i>
+                                        <span>Liste des propositions - Année {{ anneeN1 }}</span>
+                                        <Tag :value="totalProposablesN1" severity="warning" />
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <DataTable :value="allProposablesN1" 
+                                               stripedRows 
+                                               responsiveLayout="scroll"
+                                               class="p-datatable-sm"
+                                               :rows="10"
+                                               paginator
+                                               :rowsPerPageOptions="[10, 20, 50, 100]"
+                                               sortField="date_proposition"
+                                               :sortOrder="1">
+                                        <Column field="periode" header="Période" sortable>
+                                            <template #body="slotProps">
+                                                <span :class="getPeriodeColor(slotProps.data.periode_key)">
+                                                    {{ slotProps.data.periode }}
+                                                </span>
+                                            </template>
+                                        </Column>
+                                        <Column field="date_proposition_formatted" header="Date proposition" sortable>
+                                            <template #body="slotProps">
+                                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                                    <i class="pi pi-calendar"></i>
+                                                    <span>{{ slotProps.data.date_proposition_formatted }}</span>
+                                                </div>
+                                            </template>
+                                        </Column>
+                                        <Column field="matricule" header="Matricule" sortable>
+                                            <template #body="slotProps">
+                                                <Tag :value="slotProps.data.matricule" severity="info" />
+                                            </template>
+                                        </Column>
+                                        <Column field="nom_complet" header="Nom" sortable>
+                                            <template #body="slotProps">
+                                                <div class="font-medium whitespace-nowrap">{{ slotProps.data.nom_complet }}</div>
+                                            </template>
+                                        </Column>
+                                        <Column field="grade_actuel" header="Grade actuel" sortable>
+                                            <template #body="slotProps">
+                                                <span class="whitespace-nowrap">{{ slotProps.data.grade_actuel }}</span>
+                                            </template>
+                                        </Column>
+                                        <Column field="grade_cible" header="Grade cible" sortable>
+                                            <template #body="slotProps">
+                                                <Tag :value="slotProps.data.grade_cible" severity="success" />
+                                            </template>
+                                        </Column>
+                                        <template #empty>
+                                            <div class="text-center p-8 text-gray-500">
+                                                <i class="pi pi-info-circle text-4xl mb-2"></i>
+                                                <p>Aucun militaire proposable pour l'année {{ anneeN1 }}</p>
+                                            </div>
+                                        </template>
+                                    </DataTable>
                                 </template>
                             </Card>
                         </div>
@@ -93,11 +247,11 @@
                                         </Column>
                                         <Column field="grade_actuel" header="Grade"></Column>
                                         <Column header="Mois restants">
-    <template #body="slotProps">
-        <Tag :value="slotProps.data.mois_restants_formate" 
-             :severity="getMoisRestantsSeverity(slotProps.data.mois_restants)" />
-    </template>
-</Column>
+                                            <template #body="slotProps">
+                                                <Tag :value="slotProps.data.mois_restants_formate" 
+                                                     :severity="getMoisRestantsSeverity(slotProps.data.mois_restants)" />
+                                            </template>
+                                        </Column>
                                         <template #empty>
                                             <div class="text-center p-4 text-gray-500">
                                                 <i class="pi pi-info-circle mr-2"></i>
@@ -157,10 +311,10 @@
             </div>
         </div>
 
-        <!-- Toast pour les notifications -->
         <Toast position="top-right" />
     </AuthenticatedLayout>
 </template>
+
 <script setup>
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
@@ -177,12 +331,22 @@ import { useToast } from 'primevue/usetoast';
 const props = defineProps({
     alertesNonVues: Array,
     militairesProchesRetraite: Array,
+    proposablesAnneeN: Object,
+    proposablesAnneeN1: Object,
     statistiques: Object,
     grades: Array
 });
 
 const toast = useToast();
 const loadingStates = ref({});
+
+const anneeN = computed(() => {
+    return props.proposablesAnneeN?.annee || new Date().getFullYear();
+});
+
+const anneeN1 = computed(() => {
+    return props.proposablesAnneeN1?.annee || new Date().getFullYear() + 1;
+});
 
 // Configuration des cartes de statistiques
 const statistiquesCards = computed(() => [
@@ -209,6 +373,18 @@ const statistiquesCards = computed(() => [
         value: props.statistiques.prochaines_retraites, 
         icon: 'pi pi-calendar',
         colorClass: 'bg-gradient-to-r from-red-500 to-red-700'
+    },
+    { 
+        label: `Proposables ${anneeN.value}`, 
+        value: props.statistiques.total_proposables_n || 0, 
+        icon: 'pi pi-star',
+        colorClass: 'bg-gradient-to-r from-purple-500 to-purple-700'
+    },
+    { 
+        label: `Proposables ${anneeN1.value}`, 
+        value: props.statistiques.total_proposables_n1 || 0, 
+        icon: 'pi pi-star',
+        colorClass: 'bg-gradient-to-r from-indigo-500 to-indigo-700'
     }
 ]);
 
@@ -216,6 +392,71 @@ const statistiquesCards = computed(() => [
 const gradesFiltres = computed(() => {
     return props.grades.filter(grade => grade.militaires_count > 0);
 });
+
+// Aplatir toutes les propositions pour l'année N
+const allProposablesN = computed(() => {
+    const result = [];
+    const ordrePeriodes = ['janvier', 'avril', 'octobre'];
+    
+    if (props.proposablesAnneeN) {
+        for (const periode of ordrePeriodes) {
+            if (props.proposablesAnneeN[periode] && props.proposablesAnneeN[periode].proposables) {
+                for (const proposable of props.proposablesAnneeN[periode].proposables) {
+                    result.push({
+                        ...proposable,
+                        periode: props.proposablesAnneeN[periode].nom,
+                        periode_key: periode,
+                        date_proposition: props.proposablesAnneeN[periode].date,
+                        date_proposition_formatted: props.proposablesAnneeN[periode].date_formatted,
+                        nom_complet: `${proposable.nom} ${proposable.prenom}`,
+                        est_passee: props.proposablesAnneeN[periode].est_passee || false
+                    });
+                }
+            }
+        }
+    }
+    
+    return result.sort((a, b) => new Date(a.date_proposition) - new Date(b.date_proposition));
+});
+
+// Aplatir toutes les propositions pour l'année N+1
+const allProposablesN1 = computed(() => {
+    const result = [];
+    const ordrePeriodes = ['janvier', 'avril', 'octobre'];
+    
+    if (props.proposablesAnneeN1) {
+        for (const periode of ordrePeriodes) {
+            if (props.proposablesAnneeN1[periode] && props.proposablesAnneeN1[periode].proposables) {
+                for (const proposable of props.proposablesAnneeN1[periode].proposables) {
+                    result.push({
+                        ...proposable,
+                        periode: props.proposablesAnneeN1[periode].nom,
+                        periode_key: periode,
+                        date_proposition: props.proposablesAnneeN1[periode].date,
+                        date_proposition_formatted: props.proposablesAnneeN1[periode].date_formatted,
+                        nom_complet: `${proposable.nom} ${proposable.prenom}`,
+                        est_passee: props.proposablesAnneeN1[periode].est_passee || false
+                    });
+                }
+            }
+        }
+    }
+    
+    return result.sort((a, b) => new Date(a.date_proposition) - new Date(b.date_proposition));
+});
+
+const totalProposablesN = computed(() => allProposablesN.value.length);
+const totalProposablesN1 = computed(() => allProposablesN1.value.length);
+
+// Couleurs des badges par période avec white-space nowrap
+const getPeriodeColor = (periodeKey) => {
+    const colors = {
+        'janvier': 'bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-block',
+        'avril': 'bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-block',
+        'octobre': 'bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-block'
+    };
+    return colors[periodeKey] || 'bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-block';
+};
 
 // Méthodes utilitaires
 const formatDate = (date) => {
@@ -242,7 +483,6 @@ const getJoursRestantsSeverity = (jours) => {
     return 'info';
 };
 
-// Déterminer la sévérité du badge selon le nombre de mois
 const getMoisRestantsSeverity = (mois) => {
     if (mois <= 0) return 'danger';
     if (mois <= 1) return 'warning';
@@ -289,6 +529,14 @@ const marquerAlerteVue = (alerteId) => {
             loadingStates.value[alerteId] = false;
         }
     });
+};
+
+const exportProposablesAnneeN = () => {
+    window.open(route('dashboard.export-proposables-annee-n'), '_blank');
+};
+
+const exportProposablesAnneeN1 = () => {
+    window.open(route('dashboard.export-proposables-annee-n1'), '_blank');
 };
 </script>
 
