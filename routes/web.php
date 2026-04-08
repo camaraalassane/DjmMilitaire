@@ -22,6 +22,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 Route::get('dashboard/export-proposables-annee-n', [DashboardController::class, 'exportProposablesAnneeN'])->name('dashboard.export-proposables-annee-n');
 Route::get('dashboard/export-proposables-annee-n1', [DashboardController::class, 'exportProposablesAnneeN1'])->name('dashboard.export-proposables-annee-n1');
+// Exports retraites
+Route::get('dashboard/export-retraites-annee-n', [DashboardController::class, 'exportRetraitesAnneeN'])->name('dashboard.export-retraites-annee-n');
+Route::get('dashboard/export-retraites-annee-n1', [DashboardController::class, 'exportRetraitesAnneeN1'])->name('dashboard.export-retraites-annee-n1');
 // Route pour marquer une alerte comme vue
 Route::post('/alertes/{alerte}/marquer-vue', [DashboardController::class, 'marquerAlerteVue'])
     ->middleware(['auth'])

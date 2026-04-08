@@ -423,14 +423,9 @@ class MilitaireController extends Controller
         $this->verifierRetraite($militaire);
     }
 
-   /**
+/**
  * Vérifie les éligibilités aux promotions (changements de grade)
  * Type d'alerte: 'promotion'
- * 
- * Les propositions se font 3 fois par an :
- * - 1er janvier : pour les dossiers préparés en octobre/novembre/décembre
- * - 1er octobre : pour les dossiers préparés en mai/juin/juillet/août/septembre/avril
- * - 1er avril : pour les dossiers préparés en janvier/février/mars
  */
 private function verifierPromotions(Militaire $militaire)
 {
@@ -444,222 +439,299 @@ private function verifierPromotions(Militaire $militaire)
 
     $certificatsObtenus = $militaire->certificats->pluck('niveau_certificat')->toArray();
     
-    $aujourdhui = Carbon::now();
-    $moisActuel = (int)$aujourdhui->format('n');
+    $moisActuel = (int)Carbon::now()->format('n');
 
     // === PROMOTIONS SOUS-OFFICIERS ET MILITAIRES DU RANG ===
     
     // Soldat 1 → Caporal (après CAT1)
-    if ($grade == 'Soldat 1' && in_array('CAT1', $certificatsObtenus) && $conditionsBase) {
-        $dateProposition = $this->calculerDateProposition($anciennete, 5, $moisActuel);
-        if ($dateProposition && $anciennete >= 5) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Caporal au {$dateProposition->format('d/m/Y')} (5 ans d'ancienneté requis)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Soldat 1' && in_array('CAT1', $certificatsObtenus) && $conditionsBase && $anciennete >= 5) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Caporal au {$dateProposition->format('d/m/Y')} (5 ans d'ancienneté requis)",
+            Carbon::now()->addDays(2));
     }
 
     // Caporal → Sergent (après CAT2)
     if ($grade == 'Caporal' && in_array('CAT1', $certificatsObtenus) && in_array('CAT2', $certificatsObtenus) && $conditionsBase) {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 0, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Sergent au {$dateProposition->format('d/m/Y')} (avoir CAT2 et être Caporal)",
-                Carbon::now()->addDays(2));
-        }
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Sergent au {$dateProposition->format('d/m/Y')} (avoir CAT2 et être Caporal)",
+            Carbon::now()->addDays(2));
     }
 
     // Caporal → Caporal-chef (âge ≥ 47 ans, 3 ans comme Caporal, CAT1, sans CAT2)
-    if ($grade == 'Caporal' && in_array('CAT1', $certificatsObtenus) && !in_array('CAT2', $certificatsObtenus) && $age >= 47 && $conditionsBase) {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Caporal-chef au {$dateProposition->format('d/m/Y')} (âge ≥ 47 ans, 3 ans comme Caporal, avoir CAT1)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Caporal' && in_array('CAT1', $certificatsObtenus) && !in_array('CAT2', $certificatsObtenus) && $age >= 47 && $ancienneteGrade >= 3 && $conditionsBase) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Caporal-chef au {$dateProposition->format('d/m/Y')} (âge ≥ 47 ans, 3 ans comme Caporal, avoir CAT1)",
+            Carbon::now()->addDays(2));
     }
 
     // Sergent → Sergent-Chef (2 ans de grade et 5 ans de service)
-    if ($grade == 'Sergent' && $conditionsBase && $anciennete >= 5) {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 2, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Sergent-Chef au {$dateProposition->format('d/m/Y')} (2 ans comme Sergent, 5 ans de service)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Sergent' && $conditionsBase && $ancienneteGrade >= 2 && $anciennete >= 5) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Sergent-Chef au {$dateProposition->format('d/m/Y')} (2 ans comme Sergent, 5 ans de service)",
+            Carbon::now()->addDays(2));
     }
 
     // Sergent-Chef → Adjudant (3 ans de grade)
-    if ($grade == 'Sergent-Chef' && $conditionsBase) {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Adjudant au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté étant Sergent-Chef)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Sergent-Chef' && $conditionsBase && $ancienneteGrade >= 3) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Adjudant au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté étant Sergent-Chef)",
+            Carbon::now()->addDays(2));
     }
 
     // Adjudant → Adjudant-Chef (2 ans de grade)
-    if ($grade == 'Adjudant' && $conditionsBase) {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 2, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Adjudant-Chef au {$dateProposition->format('d/m/Y')} (2 ans d'ancienneté étant Adjudant)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Adjudant' && $conditionsBase && $ancienneteGrade >= 2) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Adjudant-Chef au {$dateProposition->format('d/m/Y')} (2 ans d'ancienneté étant Adjudant)",
+            Carbon::now()->addDays(2));
     }
 
     // Adjudant-Chef → Adjudant-Chef Major (CIA, BA1, BA2, âge ≥ 45)
-    if ($grade == 'Adjudant-Chef' && in_array('CIA', $certificatsObtenus) && in_array('BA1', $certificatsObtenus) && in_array('BA2', $certificatsObtenus) && $age >= 45 && $conditionsBase) {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 2, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Adjudant-Chef Major au {$dateProposition->format('d/m/Y')} (CIA, BA1, BA2 et âge ≥ 45 ans)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Adjudant-Chef' && in_array('CIA', $certificatsObtenus) && in_array('BA1', $certificatsObtenus) && in_array('BA2', $certificatsObtenus) && $age >= 45 && $conditionsBase && $ancienneteGrade >= 2) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Adjudant-Chef Major au {$dateProposition->format('d/m/Y')} (CIA, BA1, BA2 et âge ≥ 45 ans)",
+            Carbon::now()->addDays(2));
     }
 
     // === PROMOTIONS OFFICIERS ===
     
     // Sous-lieutenant → Lieutenant (2 ans)
-    if ($grade == 'Sous-lieutenant') {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 2, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Lieutenant au {$dateProposition->format('d/m/Y')} (2 ans au grade de Sous-lieutenant)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Sous-lieutenant' && $ancienneteGrade >= 2) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Lieutenant au {$dateProposition->format('d/m/Y')} (2 ans au grade de Sous-lieutenant)",
+            Carbon::now()->addDays(2));
     }
 
     // Lieutenant → Capitaine (3 ans)
-    if ($grade == 'Lieutenant') {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Capitaine au {$dateProposition->format('d/m/Y')} (3 ans au grade de Lieutenant)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Lieutenant' && $ancienneteGrade >= 3) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Capitaine au {$dateProposition->format('d/m/Y')} (3 ans au grade de Lieutenant)",
+            Carbon::now()->addDays(2));
     }
 
     // Capitaine → Commandant (3 ans d'ancienneté)
-    if ($grade == 'Capitaine') {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Commandant au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté au grade de Capitaine)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Capitaine' && $ancienneteGrade >= 3) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Commandant au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté au grade de Capitaine)",
+            Carbon::now()->addDays(2));
     }
 
     // Commandant → Lieutenant-colonel (3 ans)
-    if ($grade == 'Commandant') {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Lieutenant-colonel au {$dateProposition->format('d/m/Y')} (3 ans au grade de Commandant)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Commandant' && $ancienneteGrade >= 3) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Lieutenant-colonel au {$dateProposition->format('d/m/Y')} (3 ans au grade de Commandant)",
+            Carbon::now()->addDays(2));
     }
 
     // Lieutenant-colonel → Colonel (3 ans)
-    if ($grade == 'Lieutenant-colonel') {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Colonel au {$dateProposition->format('d/m/Y')} (3 ans au grade de Lieutenant-colonel)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Lieutenant-colonel' && $ancienneteGrade >= 3) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Colonel au {$dateProposition->format('d/m/Y')} (3 ans au grade de Lieutenant-colonel)",
+            Carbon::now()->addDays(2));
     }
 
     // Colonel → Colonel-Major (6 ans)
-    if ($grade == 'Colonel') {
-        $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 6, $moisActuel);
-        if ($dateProposition) {
-            $this->creerAlerte($militaire, 'promotion',
-                "Proposable pour Colonel-Major au {$dateProposition->format('d/m/Y')} (6 ans d'ancienneté au grade de Colonel)",
-                Carbon::now()->addDays(2));
-        }
+    if ($grade == 'Colonel' && $ancienneteGrade >= 6) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'promotion',
+            "Proposable pour Colonel-Major au {$dateProposition->format('d/m/Y')} (6 ans d'ancienneté au grade de Colonel)",
+            Carbon::now()->addDays(2));
     }
 
     // Adjudant-Chef vers Sous-lieutenant (passage sous-officier → officier)
     if (in_array('BA2', $certificatsObtenus)) {
-        $estEligible = false;
-        $anneesRequis = 0;
+        if (($grade == 'Adjudant-Chef' && $age <= 45 && $anciennete >= 15 && $ancienneteGrade >= 2)
+            || ($grade == 'Adjudant-Chef major' && $ancienneteGrade >= 2)) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $this->creerAlerte($militaire, 'promotion',
+                "Proposable pour Sous-lieutenant au {$dateProposition->format('d/m/Y')} (BA2, âge ≤ 45 ans, 15 ans de service)",
+                Carbon::now()->addDays(2));
+        }
+    }
+}
+
+/**
+ * Vérifie les éligibilités aux formations (cours, stages, écoles)
+ * Type d'alerte: 'formation'
+ */
+private function verifierFormations(Militaire $militaire)
+{
+    if ($militaire->statut !== 'actif') return;
+
+    $grade = $militaire->grade_actuel;
+    $age = $militaire->age;
+    $anciennete = $militaire->anciennete;
+    $ancienneteGrade = $militaire->ancienneteGrade;
+    $certificatsObtenus = $militaire->certificats->pluck('niveau_certificat')->toArray();
+    $conditionsBase = !$militaire->a_fait_justice && !$militaire->a_fait_discipline;
+
+    $moisActuel = (int)Carbon::now()->format('n');
+
+    // === FORMATIONS SOUS-OFFICIERS ET MILITAIRES DU RANG ===
+    
+    // CAT1 : Formation pour devenir Caporal
+    if ($grade == 'Soldat 1' && !in_array('CAT1', $certificatsObtenus) && $ancienneteGrade >= 5 && $conditionsBase) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'formation',
+            "Proposable pour CAT1 au {$dateProposition->format('d/m/Y')} (5 ans d'ancienneté au grade de Soldat 1)",
+            Carbon::now()->addDays(2));
+    }
+
+    // CAT2 : Formation pour devenir Sergent (âge < 47 ans)
+    if ($grade == 'Caporal' && $age < 47 && !in_array('CAT2', $certificatsObtenus) && $ancienneteGrade >= 3 && $conditionsBase && in_array('CAT1', $certificatsObtenus)) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'formation',
+            "Proposable pour CAT2 au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté au grade de Caporal avec CAT1)",
+            Carbon::now()->addDays(2));
+    }
+
+    // CIA : Certificat d'Instruction d'Armes
+    $gradesCIA = ['Sergent', 'Sergent-Chef', 'Adjudant', 'Adjudant-Chef', 'Adjudant-Chef major'];
+    if (in_array($grade, $gradesCIA) && !in_array('CIA', $certificatsObtenus) && $conditionsBase && $militaire->a_permis_conduire) {
+        $ancienneteOk = match($grade) {
+            'Sergent' => $ancienneteGrade >= 3,
+            'Sergent-Chef' => $ancienneteGrade >= 1,
+            'Adjudant', 'Adjudant-Chef', 'Adjudant-Chef major' => true,
+            default => false
+        };
         
-        if ($grade == 'Adjudant-Chef' && $age <= 45 && $anciennete >= 15) {
+        if ($ancienneteOk) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $message = "Proposable pour CIA au {$dateProposition->format('d/m/Y')} (permis de conduire requis)";
+            if ($grade == 'Sergent') {
+                $message .= " - 3 ans de grade sous-officier";
+            } elseif ($grade == 'Sergent-Chef') {
+                $message .= " - 1 an de grade sous-officier";
+            }
+            $this->creerAlerte($militaire, 'formation', $message, Carbon::now()->addDays(2));
+        }
+    }
+
+    // BA1 : Brevet d'Aptitude Niveau 1
+    $gradesBA1 = ['Sergent-Chef', 'Adjudant', 'Adjudant-Chef'];
+    if (in_array($grade, $gradesBA1) && !in_array('BA1', $certificatsObtenus) && in_array('CIA', $certificatsObtenus) && $conditionsBase) {
+        $certifCIA = $militaire->certificats->where('niveau_certificat', 'CIA')->first();
+        $anneesDepuisCIA = $certifCIA && $certifCIA->pivot->date_obtention
+            ? Carbon::parse($certifCIA->pivot->date_obtention)->diffInYears(Carbon::now())
+            : 0;
+        if ($anneesDepuisCIA >= 3 && $anciennete >= 8) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $this->creerAlerte($militaire, 'formation',
+                "Proposable pour BA1 au {$dateProposition->format('d/m/Y')} (CIA depuis 3 ans et 8 ans de service)",
+                Carbon::now()->addDays(2));
+        }
+    }
+
+    // BA2 : Brevet d'Aptitude Niveau 2
+    $gradesBA2 = ['Adjudant', 'Adjudant-Chef', 'Adjudant-Chef major'];
+    if (in_array($grade, $gradesBA2) && !in_array('BA2', $certificatsObtenus) && $conditionsBase) {
+        $aBA1 = in_array('BA1', $certificatsObtenus);
+        $aCT2 = in_array('CT2', $certificatsObtenus);
+        $aBMP1 = in_array('BMP1', $certificatsObtenus);
+        
+        $dateObtention = null;
+        if ($aBA1) {
+            $certifBA1 = $militaire->certificats->where('niveau_certificat', 'BA1')->first();
+            $dateObtention = $certifBA1 && $certifBA1->pivot->date_obtention 
+                ? Carbon::parse($certifBA1->pivot->date_obtention) 
+                : null;
+        } elseif ($aCT2) {
+            $certifCT2 = $militaire->certificats->where('niveau_certificat', 'CT2')->first();
+            $dateObtention = $certifCT2 && $certifCT2->pivot->date_obtention 
+                ? Carbon::parse($certifCT2->pivot->date_obtention) 
+                : null;
+        } elseif ($aBMP1) {
+            $certifBMP1 = $militaire->certificats->where('niveau_certificat', 'BMP1')->first();
+            $dateObtention = $certifBMP1 && $certifBMP1->pivot->date_obtention 
+                ? Carbon::parse($certifBMP1->pivot->date_obtention) 
+                : null;
+        }
+        
+        $anneesDepuis = $dateObtention ? $dateObtention->diffInYears(Carbon::now()) : 0;
+        
+        if ($anneesDepuis >= 3 && ($aBA1 || $aCT2 || $aBMP1)) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $this->creerAlerte($militaire, 'formation',
+                "Proposable pour BA2 au {$dateProposition->format('d/m/Y')} (BA1, CT2 ou BMP1 depuis 3 ans)",
+                Carbon::now()->addDays(2));
+        }
+    }
+
+    // === FORMATIONS OFFICIERS ===
+    
+    // 1. APLI (Cour d'Application)
+    if (in_array($grade, ['Sous-lieutenant', 'Lieutenant', 'Capitaine']) 
+        && !in_array('APLI', $certificatsObtenus) && !in_array('CFCU', $certificatsObtenus) && $age <= 50) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'formation',
+            "Proposable pour APLI au {$dateProposition->format('d/m/Y')} (Grade minimum sous-lieutenant et âge ≤ 50 ans)",
+            Carbon::now()->addDays(2));
+    }
+
+    // 2. CFCU (Cour des Futurs Commandants d'Unité)
+    if (in_array($grade, ['Lieutenant', 'Capitaine']) && !in_array('CFCU', $certificatsObtenus)) {
+        $estEligible = false;
+        $message = '';
+        
+        if ($grade == 'Capitaine') {
             $estEligible = true;
-            $anneesRequis = 2;
-        } elseif ($grade == 'Adjudant-Chef major') {
+            $message = "Capitaine éligible pour CFCU";
+        } elseif (in_array('APLI', $certificatsObtenus)) {
             $estEligible = true;
-            $anneesRequis = 2;
+            $message = "avoir fait APLI";
         }
         
         if ($estEligible) {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, $anneesRequis, $moisActuel);
-            if ($dateProposition) {
-                $this->creerAlerte($militaire, 'promotion',
-                    "Proposable pour Sous-lieutenant au {$dateProposition->format('d/m/Y')} (BA2, âge ≤ 45 ans, 15 ans de service)",
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $this->creerAlerte($militaire, 'formation',
+                "Proposable pour CFCU au {$dateProposition->format('d/m/Y')} ({$message})",
+                Carbon::now()->addDays(2));
+        }
+    }
+
+    // 3. CEM (Cour d'état-major)
+    if (in_array($grade, ['Capitaine', 'Commandant']) && !in_array('CEM', $certificatsObtenus)) {
+        if (($grade == 'Capitaine' && $ancienneteGrade >= 3) || $grade == 'Commandant') {
+            if ($age <= 45) {
+                $dateProposition = $this->getProchaineDateProposition($moisActuel);
+                $this->creerAlerte($militaire, 'formation',
+                    "Proposable pour CEM au {$dateProposition->format('d/m/Y')} (Capitaine avec 3 ans ou commandant, âge ≤ 45)",
                     Carbon::now()->addDays(2));
             }
         }
     }
-}
 
-/**
- * Calcule la date de proposition pour une promotion basée sur l'ancienneté totale (années de service)
- * 
- * @param int $anciennete Années de service du militaire
- * @param int $anneesRequis Années d'ancienneté requises
- * @param int $moisActuel Mois actuel (1-12)
- * @return Carbon|null Date de proposition ou null si non éligible
- */
-private function calculerDateProposition($anciennete, $anneesRequis, $moisActuel)
-{
-    if ($anciennete < $anneesRequis) {
-        return null;
+    // 4. Certificat d'État-major
+    if (!in_array('Certificat État-major', $certificatsObtenus) && $grade == 'Commandant' && $age > 45) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'formation',
+            "Proposable pour Certificat d'État-major au {$dateProposition->format('d/m/Y')} (Commandant et âge > 45 ans)",
+            Carbon::now()->addDays(2));
     }
     
-    return $this->getProchaineDateProposition($moisActuel);
-}
-
-/**
- * Calcule la date de proposition basée sur la date de dernière promotion
- * 
- * @param string|null $dateDernierePromotion Date de la dernière promotion
- * @param int $anneesRequis Années requises dans le grade actuel
- * @param int $moisActuel Mois actuel (1-12)
- * @return Carbon|null Date de proposition ou null si non éligible
- */
-private function calculerDatePropositionParAncienneteGrade($dateDernierePromotion, $anneesRequis, $moisActuel)
-{
-    if (!$dateDernierePromotion) {
-        return null;
+    // 5. École de guerre
+    if (in_array($grade, ['Lieutenant-colonel', 'Colonel', 'Colonel-Major']) 
+        && !in_array('ECOLE_GUERRE', $certificatsObtenus) && $ancienneteGrade >= 2 && $age <= 53) {
+        $dateProposition = $this->getProchaineDateProposition($moisActuel);
+        $this->creerAlerte($militaire, 'formation',
+            "Proposable pour l'École de guerre au {$dateProposition->format('d/m/Y')} (Lieutenant-colonel avec 2 ans d'ancienneté, âge ≤ 53)",
+            Carbon::now()->addDays(2));
     }
-    
-    $datePromotion = Carbon::parse($dateDernierePromotion);
-    $aujourdhui = Carbon::now();
-    
-    // Calcule la date à laquelle les années requises seront atteintes
-    $dateAncienneteAtteinte = $datePromotion->copy()->addYears($anneesRequis);
-    
-    // Si la date d'ancienneté n'est pas encore atteinte, pas de proposition
-    if ($dateAncienneteAtteinte->gt($aujourdhui)) {
-        return null;
-    }
-    
-    return $this->getProchaineDateProposition($moisActuel);
 }
 
 /**
  * Détermine la prochaine date de proposition selon le mois actuel
- * 
- * Périodes de proposition :
- * - 1er janvier : pour les dossiers préparés en octobre, novembre, décembre
- * - 1er octobre : pour les dossiers préparés en mai, juin, juillet, août, septembre, avril
- * - 1er avril : pour les dossiers préparés en janvier, février, mars
- * 
- * @param int $moisActuel Mois actuel (1-12)
- * @return Carbon Date de la prochaine proposition
  */
 private function getProchaineDateProposition($moisActuel)
 {
@@ -671,7 +743,6 @@ private function getProchaineDateProposition($moisActuel)
     }
     
     // Période mai-juin-juillet-août-septembre-avril -> proposition au 1er octobre de l'année en cours
-    // Note: avril (4) est inclus dans cette période
     if (($moisActuel >= 5 && $moisActuel <= 9) || $moisActuel == 4) {
         return Carbon::create($annee, 10, 1);
     }
@@ -679,158 +750,6 @@ private function getProchaineDateProposition($moisActuel)
     // Période janvier-février-mars -> proposition au 1er avril de l'année en cours
     return Carbon::create($annee, 4, 1);
 }
-    /**
-     * Vérifie les éligibilités aux formations (cours, stages, écoles)
-     * Type d'alerte: 'formation'
-     */
-    private function verifierFormations(Militaire $militaire)
-    {
-        if ($militaire->statut !== 'actif') return;
-
-        $grade = $militaire->grade_actuel;
-        $age = $militaire->age;
-        $anciennete = $militaire->anciennete;
-        $ancienneteGrade = $militaire->ancienneteGrade;
-        $certificatsObtenus = $militaire->certificats->pluck('niveau_certificat')->toArray();
-        $conditionsBase = !$militaire->a_fait_justice && !$militaire->a_fait_discipline;
-
-        // === FORMATIONS SOUS-OFFICIERS ET MILITAIRES DU RANG ===
-        
-        // CAT1 : Formation pour devenir Caporal
-        if ($grade == 'Soldat 1' && !in_array('CAT1', $certificatsObtenus) && $ancienneteGrade >= 5 && $conditionsBase) {
-            $this->creerAlerte($militaire, 'formation',
-                "Proposable pour CAT1 (5 ans d'ancienneté au grade de Soldat 1)",
-                Carbon::now()->addDays(2));
-        }
-
-        // CAT2 : Formation pour devenir Sergent (âge < 47 ans)
-        if ($grade == 'Caporal' && $age < 47 && !in_array('CAT2', $certificatsObtenus) && $ancienneteGrade >= 3 && $conditionsBase && in_array('CAT1', $certificatsObtenus)) {
-            $this->creerAlerte($militaire, 'formation',
-                "Proposable pour CAT2 (3 ans d'ancienneté au grade de Caporal avec CAT1)",
-                Carbon::now()->addDays(2));
-        }
-
-        // CIA : Certificat d'Instruction d'Armes
-        $gradesCIA = ['Sergent', 'Sergent-Chef', 'Adjudant', 'Adjudant-Chef', 'Adjudant-Chef major'];
-        if (in_array($grade, $gradesCIA) && !in_array('CIA', $certificatsObtenus) && $conditionsBase && $militaire->a_permis_conduire) {
-            $ancienneteOk = match($grade) {
-                'Sergent' => $ancienneteGrade >= 3,
-                'Sergent-Chef' => $ancienneteGrade >= 1,
-                'Adjudant', 'Adjudant-Chef', 'Adjudant-Chef major' => true,
-                default => false
-            };
-            
-            if ($ancienneteOk) {
-                $this->creerAlerte($militaire, 'formation',
-                    "Proposable pour CIA (permis de conduire requis)" . 
-                    ($grade == 'Sergent' ? " - 3 ans de grade sous-officier" : ($grade == 'Sergent-Chef' ? " - 1 an de grade sous-officier" : "")),
-                    Carbon::now()->addDays(2));
-            }
-        }
-
-        // BA1 : Brevet d'Aptitude Niveau 1
-        $gradesBA1 = ['Sergent-Chef', 'Adjudant', 'Adjudant-Chef'];
-        if (in_array($grade, $gradesBA1) && !in_array('BA1', $certificatsObtenus) && in_array('CIA', $certificatsObtenus) && $conditionsBase) {
-            $certifCIA = $militaire->certificats->where('niveau_certificat', 'CIA')->first();
-            $anneesDepuisCIA = $certifCIA && $certifCIA->pivot->date_obtention
-                ? Carbon::parse($certifCIA->pivot->date_obtention)->diffInYears(Carbon::now())
-                : 0;
-            if ($anneesDepuisCIA >= 3 && $anciennete >= 8) {
-                $this->creerAlerte($militaire, 'formation',
-                    "Proposable pour BA1 (CIA depuis 3 ans et 8 ans de service)",
-                    Carbon::now()->addDays(2));
-            }
-        }
-
-        // BA2 : Brevet d'Aptitude Niveau 2
-        $gradesBA2 = ['Adjudant', 'Adjudant-Chef', 'Adjudant-Chef major'];
-        if (in_array($grade, $gradesBA2) && !in_array('BA2', $certificatsObtenus) && $conditionsBase) {
-            $aBA1 = in_array('BA1', $certificatsObtenus);
-            $aCT2 = in_array('CT2', $certificatsObtenus);
-            $aBMP1 = in_array('BMP1', $certificatsObtenus);
-            
-            $dateObtention = null;
-            if ($aBA1) {
-                $certifBA1 = $militaire->certificats->where('niveau_certificat', 'BA1')->first();
-                $dateObtention = $certifBA1 && $certifBA1->pivot->date_obtention 
-                    ? Carbon::parse($certifBA1->pivot->date_obtention) 
-                    : null;
-            } elseif ($aCT2) {
-                $certifCT2 = $militaire->certificats->where('niveau_certificat', 'CT2')->first();
-                $dateObtention = $certifCT2 && $certifCT2->pivot->date_obtention 
-                    ? Carbon::parse($certifCT2->pivot->date_obtention) 
-                    : null;
-            } elseif ($aBMP1) {
-                $certifBMP1 = $militaire->certificats->where('niveau_certificat', 'BMP1')->first();
-                $dateObtention = $certifBMP1 && $certifBMP1->pivot->date_obtention 
-                    ? Carbon::parse($certifBMP1->pivot->date_obtention) 
-                    : null;
-            }
-            
-            $anneesDepuis = $dateObtention ? $dateObtention->diffInYears(Carbon::now()) : 0;
-            
-            if ($anneesDepuis >= 3 && ($aBA1 || $aCT2 || $aBMP1)) {
-                $this->creerAlerte($militaire, 'formation',
-                    "Proposable pour BA2 (BA1, CT2 ou BMP1 depuis 3 ans)",
-                    Carbon::now()->addDays(2));
-            }
-        }
-
-        // === FORMATIONS OFFICIERS ===
-        
-        // 1. APLI (Cour d'Application)
-        if (in_array($grade, ['Sous-lieutenant', 'Lieutenant', 'Capitaine']) 
-            && !in_array('APLI', $certificatsObtenus) && !in_array('CFCU', $certificatsObtenus) && $age <= 50) {
-            $this->creerAlerte($militaire, 'formation',
-                "Proposable pour cour d'APLI (Grade minimum sous-lieutenant et âge ≤ 50 ans)",
-                Carbon::now()->addDays(2));
-        }
-
-        // 2. CFCU (Cour des Futurs Commandants d'Unité)
-        // Les capitaines sont éligibles sans APLI, les lieutenants nécessitent APLI
-        if (in_array($grade, ['Lieutenant', 'Capitaine']) && !in_array('CFCU', $certificatsObtenus)) {
-            $estEligible = false;
-            
-            if ($grade == 'Capitaine') {
-                $estEligible = true;
-                $message = "Proposable pour CFCU (Capitaine éligible)";
-            } elseif (in_array('APLI', $certificatsObtenus)) {
-                $estEligible = true;
-                $message = "Proposable pour CFCU (avoir fait APLI)";
-            }
-            
-            if ($estEligible) {
-                $this->creerAlerte($militaire, 'formation', $message, Carbon::now()->addDays(2));
-            }
-        }
-
-// 3. CEM (Cour d'état-major) - Formation pour officiers
-// Concerne les capitaines avec 3 ans d'ancienneté et les commandants (âge ≤ 45)
-if (in_array($grade, ['Capitaine', 'Commandant']) && !in_array('CEM', $certificatsObtenus)) {
-    if (($grade == 'Capitaine' && $ancienneteGrade >= 3) || $grade == 'Commandant') {
-        if ($age <= 45) {
-            $this->creerAlerte($militaire, 'formation',
-                "Proposable pour Cour d'état-major (CEM) - capitaine avec 3 ans ou commandant, âge ≤ 45",
-                Carbon::now()->addDays(2));
-        }
-    }
-}
-
-// 4. Certificat d'État-major (anciennement dans CEM) - Formation pour officiers
-// Concerne les commandants avec âge > 45 ans
-if (!in_array('Certificat État-major', $certificatsObtenus) && $grade == 'Commandant' && $age > 45) {
-    $this->creerAlerte($militaire, 'formation',
-        "Proposable pour Certificat d'État-major - commandant et âge > 45 ans",
-        Carbon::now()->addDays(2));
-}
-        // 5. École de guerre
-        if (in_array($grade, ['Lieutenant-colonel', 'Colonel', 'Colonel-Major']) 
-            && !in_array('ECOLE_GUERRE', $certificatsObtenus) && $ancienneteGrade >= 2 && $age <= 53) {
-            $this->creerAlerte($militaire, 'formation',
-                "Proposable pour l'École de guerre - lieutenant-colonel avec 2 ans d'ancienneté, âge ≤ 53",
-                Carbon::now()->addDays(2));
-        }
-    }
 
     /**
      * Vérifie les retraites proches (dans les 12 mois).

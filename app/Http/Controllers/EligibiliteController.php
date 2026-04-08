@@ -65,11 +65,6 @@ class EligibiliteController extends Controller
 
     /**
      * Vérifie les éligibilités aux promotions (changements de grade uniquement)
-     * 
-     * Les propositions se font 3 fois par an :
-     * - 1er janvier : pour les dossiers préparés en octobre/novembre/décembre
-     * - 1er octobre : pour les dossiers préparés en mai/juin/juillet/août/septembre/avril
-     * - 1er avril : pour les dossiers préparés en janvier/février/mars
      */
     private function checkPromotions($militaire, &$eligibilites)
     {
@@ -81,303 +76,264 @@ class EligibiliteController extends Controller
 
         $certificatsObtenus = $militaire->certificats->pluck('niveau_certificat')->toArray();
         
-        $aujourdhui = Carbon::now();
-        $moisActuel = (int)$aujourdhui->format('n');
+        $moisActuel = (int)Carbon::now()->format('n');
 
         // === PROMOTIONS SOUS-OFFICIERS ET MILITAIRES DU RANG ===
         
         // Soldat 1 → Caporal (après CAT1)
-        if ($grade == 'Soldat 1' && in_array('CAT1', $certificatsObtenus) && $conditionsBase) {
-            $dateProposition = $this->calculerDateProposition($anciennete, 5, $moisActuel);
-            if ($dateProposition && $anciennete >= 5) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Caporal',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (5 ans d'ancienneté requis)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Soldat 1' && in_array('CAT1', $certificatsObtenus) && $conditionsBase && $anciennete >= 5) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Caporal',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (5 ans d'ancienneté requis)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Caporal → Sergent (après CAT2)
         if ($grade == 'Caporal' && in_array('CAT1', $certificatsObtenus) && in_array('CAT2', $certificatsObtenus) && $conditionsBase) {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 0, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Sergent',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (avoir CAT2 et être Caporal)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Sergent',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (avoir CAT2 et être Caporal)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Caporal → Caporal-chef (âge ≥ 47 ans, 3 ans comme Caporal, CAT1, sans CAT2)
-        if ($grade == 'Caporal' && in_array('CAT1', $certificatsObtenus) && !in_array('CAT2', $certificatsObtenus) && $age >= 47 && $conditionsBase) {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Caporal-chef',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (âge ≥ 47 ans, 3 ans comme Caporal, avoir CAT1)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Caporal' && in_array('CAT1', $certificatsObtenus) && !in_array('CAT2', $certificatsObtenus) && $age >= 47 && $ancienneteGrade >= 3 && $conditionsBase) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Caporal-chef',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (âge ≥ 47 ans, 3 ans comme Caporal, avoir CAT1)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Sergent → Sergent-Chef (2 ans de grade et 5 ans de service)
-        if ($grade == 'Sergent' && $conditionsBase && $anciennete >= 5) {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 2, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Sergent-Chef',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (2 ans comme Sergent, 5 ans de service)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Sergent' && $conditionsBase && $ancienneteGrade >= 2 && $anciennete >= 5) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Sergent-Chef',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (2 ans comme Sergent, 5 ans de service)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Sergent-Chef → Adjudant (3 ans de grade)
-        if ($grade == 'Sergent-Chef' && $conditionsBase) {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Adjudant',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté étant Sergent-Chef)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Sergent-Chef' && $conditionsBase && $ancienneteGrade >= 3) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Adjudant',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté étant Sergent-Chef)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Adjudant → Adjudant-Chef (2 ans de grade)
-        if ($grade == 'Adjudant' && $conditionsBase) {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 2, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Adjudant-Chef',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (2 ans d'ancienneté étant Adjudant)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Adjudant' && $conditionsBase && $ancienneteGrade >= 2) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Adjudant-Chef',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (2 ans d'ancienneté étant Adjudant)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Adjudant-Chef → Adjudant-Chef Major (CIA, BA1, BA2, âge ≥ 45)
-        if ($grade == 'Adjudant-Chef' && in_array('CIA', $certificatsObtenus) && in_array('BA1', $certificatsObtenus) && in_array('BA2', $certificatsObtenus) && $age >= 45 && $conditionsBase) {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 2, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Adjudant-Chef Major',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (CIA, BA1, BA2 et âge ≥ 45 ans)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Adjudant-Chef' && in_array('CIA', $certificatsObtenus) && in_array('BA1', $certificatsObtenus) && in_array('BA2', $certificatsObtenus) && $age >= 45 && $conditionsBase && $ancienneteGrade >= 2) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Adjudant-Chef Major',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (CIA, BA1, BA2 et âge ≥ 45 ans)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // === PROMOTIONS OFFICIERS ===
         
         // Sous-lieutenant → Lieutenant (2 ans)
-        if ($grade == 'Sous-lieutenant') {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 2, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Lieutenant',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (2 ans au grade de Sous-lieutenant)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Sous-lieutenant' && $ancienneteGrade >= 2) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Lieutenant',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (2 ans au grade de Sous-lieutenant)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Lieutenant → Capitaine (3 ans)
-        if ($grade == 'Lieutenant') {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Capitaine',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans au grade de Lieutenant)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Lieutenant' && $ancienneteGrade >= 3) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Capitaine',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans au grade de Lieutenant)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Capitaine → Commandant (3 ans d'ancienneté)
-        if ($grade == 'Capitaine') {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Commandant',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté au grade de Capitaine)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Capitaine' && $ancienneteGrade >= 3) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Commandant',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans d'ancienneté au grade de Capitaine)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Commandant → Lieutenant-colonel (3 ans)
-        if ($grade == 'Commandant') {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Lieutenant-colonel',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans au grade de Commandant)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Commandant' && $ancienneteGrade >= 3) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Lieutenant-colonel',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans au grade de Commandant)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Lieutenant-colonel → Colonel (3 ans)
-        if ($grade == 'Lieutenant-colonel') {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 3, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Colonel',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans au grade de Lieutenant-colonel)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Lieutenant-colonel' && $ancienneteGrade >= 3) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Colonel',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (3 ans au grade de Lieutenant-colonel)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Colonel → Colonel-Major (6 ans)
-        if ($grade == 'Colonel') {
-            $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, 6, $moisActuel);
-            if ($dateProposition) {
-                $eligibilites['promotions'][] = [
-                    'militaire' => [
-                        'id' => $militaire->id,
-                        'matricule' => $militaire->matricule,
-                        'nom' => $militaire->nom,
-                        'prenom' => $militaire->prenom,
-                        'grade_actuel' => $militaire->grade_actuel,
-                    ],
-                    'type' => 'Promotion',
-                    'grade_cible' => 'Colonel-Major',
-                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (6 ans d'ancienneté au grade de Colonel)",
-                    'date_estimation' => $dateProposition->format('Y-m-d'),
-                ];
-            }
+        if ($grade == 'Colonel' && $ancienneteGrade >= 6) {
+            $dateProposition = $this->getProchaineDateProposition($moisActuel);
+            $eligibilites['promotions'][] = [
+                'militaire' => [
+                    'id' => $militaire->id,
+                    'matricule' => $militaire->matricule,
+                    'nom' => $militaire->nom,
+                    'prenom' => $militaire->prenom,
+                    'grade_actuel' => $militaire->grade_actuel,
+                ],
+                'type' => 'Promotion',
+                'grade_cible' => 'Colonel-Major',
+                'message' => "Proposable au {$dateProposition->format('d/m/Y')} (6 ans d'ancienneté au grade de Colonel)",
+                'date_estimation' => $dateProposition->format('Y-m-d'),
+            ];
         }
 
         // Adjudant-Chef vers Sous-lieutenant (passage sous-officier → officier)
         if (in_array('BA2', $certificatsObtenus)) {
-            $estEligible = false;
-            $anneesRequis = 0;
-            
-            if ($grade == 'Adjudant-Chef' && $age <= 45 && $anciennete >= 15) {
-                $estEligible = true;
-                $anneesRequis = 2;
-            } elseif ($grade == 'Adjudant-Chef major') {
-                $estEligible = true;
-                $anneesRequis = 2;
-            }
-            
-            if ($estEligible) {
-                $dateProposition = $this->calculerDatePropositionParAncienneteGrade($militaire->date_derniere_promotion, $anneesRequis, $moisActuel);
-                if ($dateProposition) {
-                    $eligibilites['promotions'][] = [
-                        'militaire' => [
-                            'id' => $militaire->id,
-                            'matricule' => $militaire->matricule,
-                            'nom' => $militaire->nom,
-                            'prenom' => $militaire->prenom,
-                            'grade_actuel' => $militaire->grade_actuel,
-                        ],
-                        'type' => 'Promotion',
-                        'grade_cible' => 'Sous-lieutenant',
-                        'message' => "Proposable au {$dateProposition->format('d/m/Y')} (BA2, âge ≤ 45 ans, 15 ans de service)",
-                        'date_estimation' => $dateProposition->format('Y-m-d'),
-                    ];
-                }
+            if (($grade == 'Adjudant-Chef' && $age <= 45 && $anciennete >= 15 && $ancienneteGrade >= 2)
+                || ($grade == 'Adjudant-Chef major' && $ancienneteGrade >= 2)) {
+                $dateProposition = $this->getProchaineDateProposition($moisActuel);
+                $eligibilites['promotions'][] = [
+                    'militaire' => [
+                        'id' => $militaire->id,
+                        'matricule' => $militaire->matricule,
+                        'nom' => $militaire->nom,
+                        'prenom' => $militaire->prenom,
+                        'grade_actuel' => $militaire->grade_actuel,
+                    ],
+                    'type' => 'Promotion',
+                    'grade_cible' => 'Sous-lieutenant',
+                    'message' => "Proposable au {$dateProposition->format('d/m/Y')} (BA2, âge ≤ 45 ans, 15 ans de service)",
+                    'date_estimation' => $dateProposition->format('Y-m-d'),
+                ];
             }
         }
     }
@@ -394,8 +350,7 @@ class EligibiliteController extends Controller
         $certificatsObtenus = $militaire->certificats->pluck('niveau_certificat')->toArray();
         $conditionsBase = !$militaire->a_fait_justice && !$militaire->a_fait_discipline;
         
-        $aujourdhui = Carbon::now();
-        $moisActuel = (int)$aujourdhui->format('n');
+        $moisActuel = (int)Carbon::now()->format('n');
 
         // === FORMATIONS SOUS-OFFICIERS ET MILITAIRES DU RANG ===
         
@@ -653,7 +608,7 @@ class EligibiliteController extends Controller
     }
 
     /**
-     * Vérifie les retraites proches (dans les 12 mois).
+     * Vérifie les retraites
      */
     private function checkRetraite($militaire, &$eligibilites)
     {
@@ -689,60 +644,7 @@ class EligibiliteController extends Controller
     }
 
     /**
-     * Calcule la date de proposition pour une promotion basée sur l'ancienneté totale (années de service)
-     * 
-     * @param int $anciennete Années de service du militaire
-     * @param int $anneesRequis Années d'ancienneté requises
-     * @param int $moisActuel Mois actuel (1-12)
-     * @return Carbon|null Date de proposition ou null si non éligible
-     */
-    private function calculerDateProposition($anciennete, $anneesRequis, $moisActuel)
-    {
-        if ($anciennete < $anneesRequis) {
-            return null;
-        }
-        
-        return $this->getProchaineDateProposition($moisActuel);
-    }
-
-    /**
-     * Calcule la date de proposition basée sur la date de dernière promotion
-     * 
-     * @param string|null $dateDernierePromotion Date de la dernière promotion
-     * @param int $anneesRequis Années requises dans le grade actuel
-     * @param int $moisActuel Mois actuel (1-12)
-     * @return Carbon|null Date de proposition ou null si non éligible
-     */
-    private function calculerDatePropositionParAncienneteGrade($dateDernierePromotion, $anneesRequis, $moisActuel)
-    {
-        if (!$dateDernierePromotion) {
-            return null;
-        }
-        
-        $datePromotion = Carbon::parse($dateDernierePromotion);
-        $aujourdhui = Carbon::now();
-        
-        // Calcule la date à laquelle les années requises seront atteintes
-        $dateAncienneteAtteinte = $datePromotion->copy()->addYears($anneesRequis);
-        
-        // Si la date d'ancienneté n'est pas encore atteinte, pas de proposition
-        if ($dateAncienneteAtteinte->gt($aujourdhui)) {
-            return null;
-        }
-        
-        return $this->getProchaineDateProposition($moisActuel);
-    }
-
-    /**
      * Détermine la prochaine date de proposition selon le mois actuel
-     * 
-     * Périodes de proposition :
-     * - 1er janvier : pour les dossiers préparés en octobre, novembre, décembre
-     * - 1er octobre : pour les dossiers préparés en mai, juin, juillet, août, septembre, avril
-     * - 1er avril : pour les dossiers préparés en janvier, février, mars
-     * 
-     * @param int $moisActuel Mois actuel (1-12)
-     * @return Carbon Date de la prochaine proposition
      */
     private function getProchaineDateProposition($moisActuel)
     {
@@ -754,7 +656,6 @@ class EligibiliteController extends Controller
         }
         
         // Période mai-juin-juillet-août-septembre-avril -> proposition au 1er octobre de l'année en cours
-        // Note: avril (4) est inclus dans cette période
         if (($moisActuel >= 5 && $moisActuel <= 9) || $moisActuel == 4) {
             return Carbon::create($annee, 10, 1);
         }

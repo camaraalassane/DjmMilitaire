@@ -12,6 +12,8 @@ use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ProposablesAnneeNExport;
 use App\Exports\ProposablesAnneeN1Export;
+use App\Exports\RetraitesAnneeNExport;
+use App\Exports\RetraitesAnneeN1Export;
 
 class DashboardController extends Controller
 {
@@ -41,40 +43,14 @@ class DashboardController extends Controller
         // Récupérer tous les militaires actifs
         $militairesActifs = Militaire::where('statut', 'actif')->with('certificats')->get();
         
-        // Calculer les retraites proches (dans les 12 mois)
-        $aujourdhui = Carbon::now()->startOfDay();
+        // Calculer les retraites pour l'année N
+        $retraitesAnneeN = $this->calculerRetraitesPourAnnee($militairesActifs, 0);
         
-        $militairesProchesRetraite = $militairesActifs
-            ->map(function ($militaire) use ($aujourdhui) {
-                $dateRetraite = $militaire->calculerDateRetraite();
-                if ($dateRetraite) {
-                    $diffJours = $aujourdhui->diffInDays($dateRetraite);
-                    $moisRestants = floor($diffJours / 30);
-                    $joursRestants = $diffJours % 30;
-                    
-                    if ($diffJours >= 0) {
-                        return [
-                            'id' => $militaire->id,
-                            'nom' => $militaire->nom,
-                            'prenom' => $militaire->prenom,
-                            'matricule' => $militaire->matricule,
-                            'grade_actuel' => $militaire->grade_actuel,
-                            'date_retraite' => $dateRetraite->format('Y-m-d'),
-                            'statut' => $militaire->statut,
-                            'mois_restants' => $moisRestants,
-                            'jours_restants' => $joursRestants,
-                            'mois_restants_formate' => $this->formaterMoisRestants($moisRestants, $joursRestants),
-                        ];
-                    }
-                }
-                return null;
-            })
-            ->filter(function ($item) {
-                return $item && $item['mois_restants'] <= 12;
-            })
-            ->sortBy('date_retraite')
-            ->take(10)
-            ->values();
+        // Récupérer les IDs des militaires déjà dans la liste des retraites N
+        $idsRetraitesAnneeN = collect($retraitesAnneeN['retraites'])->pluck('id')->toArray();
+        
+        // Calculer les retraites pour l'année N+1 (excluant ceux déjà dans N)
+        $retraitesAnneeN1 = $this->calculerRetraitesPourAnnee($militairesActifs, 1, $idsRetraitesAnneeN);
 
         // Calculer les militaires proposables pour l'année N (année en cours)
         $proposablesAnneeN = $this->calculerProposablesPourAnnee($militairesActifs, 0);
@@ -91,14 +67,14 @@ class DashboardController extends Controller
         $idsProposablesAnneeN = array_unique($idsProposablesAnneeN);
         
         // Calculer les militaires proposables pour l'année N+1 (année prochaine)
-        // En excluant ceux déjà proposables dans l'année N
         $proposablesAnneeN1 = $this->calculerProposablesPourAnnee($militairesActifs, 1, $idsProposablesAnneeN);
 
         $statistiques = [
             'total_militaires' => Militaire::count(),
             'militaires_actifs' => $militairesActifs->count(),
             'alertes_non_vues' => Alerte::where('est_vue', false)->count(),
-            'prochaines_retraites' => $militairesProchesRetraite->count(),
+            'total_retraites_n' => $retraitesAnneeN['total'],
+            'total_retraites_n1' => $retraitesAnneeN1['total'],
             'total_proposables_n' => $proposablesAnneeN['total'],
             'total_proposables_n1' => $proposablesAnneeN1['total'],
         ];
@@ -118,7 +94,8 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'alertesNonVues' => $alertesNonVues,
-            'militairesProchesRetraite' => $militairesProchesRetraite,
+            'retraitesAnneeN' => $retraitesAnneeN,
+            'retraitesAnneeN1' => $retraitesAnneeN1,
             'proposablesAnneeN' => $proposablesAnneeN,
             'proposablesAnneeN1' => $proposablesAnneeN1,
             'statistiques' => $statistiques,
@@ -127,137 +104,183 @@ class DashboardController extends Controller
     }
 
     /**
-     * Calcule les militaires proposables pour une année donnée (N ou N+1)
-     * Périodes: Janvier, Avril, Octobre de l'année cible
+     * Calcule les militaires qui prennent leur retraite dans une année donnée
      * 
      * @param $militairesActifs Collection des militaires actifs
      * @param int $decalageAnnees 0 pour année N, 1 pour année N+1
-     * @param array $idsExclus IDs des militaires à exclure (ceux déjà proposables dans l'année précédente)
+     * @param array $idsExclus IDs des militaires à exclure
      */
-   /**
- * Calcule les militaires proposables pour une année donnée (N ou N+1)
- * Périodes: Janvier, Avril, Octobre de l'année cible
- */
-private function calculerProposablesPourAnnee($militairesActifs, $decalageAnnees, $idsExclus = [])
-{
-    $aujourdhui = Carbon::now();
-    $anneeCible = $aujourdhui->year + $decalageAnnees;
-    
-    // Définir les 3 périodes de l'année cible avec leurs couleurs distinctes
-    $periodes = [
-        'janvier' => [
-            'nom' => 'Proposition du 1er Janvier',
-            'date' => Carbon::create($anneeCible, 1, 1),
-            'ordre' => 1,
-            'couleur' => 'bg-purple-500',
-            'couleur_texte' => 'text-purple-500',
-            'couleur_border' => 'border-purple-500',
-            'icon' => 'pi-calendar-plus'
-        ],
-        'avril' => [
-            'nom' => 'Proposition du 1er Avril',
-            'date' => Carbon::create($anneeCible, 4, 1),
-            'ordre' => 2,
-            'couleur' => 'bg-green-500',
-            'couleur_texte' => 'text-green-500',
-            'couleur_border' => 'border-green-500',
-            'icon' => 'pi-calendar-plus'
-        ],
-        'octobre' => [
-            'nom' => 'Proposition du 1er Octobre',
-            'date' => Carbon::create($anneeCible, 10, 1),
-            'ordre' => 3,
-            'couleur' => 'bg-blue-500',
-            'couleur_texte' => 'text-blue-500',
-            'couleur_border' => 'border-blue-500',
-            'icon' => 'pi-calendar'
-        ]
-    ];
-    
-    $resultats = [];
-    $totalProposables = 0;
-    $militairesDejaProposables = [];
-    
-    foreach ($periodes as $key => $periode) {
-        $proposables = [];
-        $datePeriode = $periode['date'];
-        $estPeriodePassee = $datePeriode < $aujourdhui;
+    private function calculerRetraitesPourAnnee($militairesActifs, $decalageAnnees, $idsExclus = [])
+    {
+        $aujourdhui = Carbon::now();
+        $anneeCible = $aujourdhui->year + $decalageAnnees;
+        
+        // Définir la période de l'année cible (1er janvier au 31 décembre)
+        $dateDebut = Carbon::create($anneeCible, 1, 1)->startOfDay();
+        $dateFin = Carbon::create($anneeCible, 12, 31)->endOfDay();
+        
+        $retraites = [];
         
         foreach ($militairesActifs as $militaire) {
-            // Exclure les militaires déjà proposables dans l'année précédente
+            // Exclure les militaires déjà dans la liste de l'année précédente
             if (in_array($militaire->id, $idsExclus)) {
                 continue;
             }
             
-            // Exclure les militaires déjà proposables dans une période antérieure de la même année
-            if (in_array($militaire->id, $militairesDejaProposables)) {
-                continue;
-            }
+            $dateRetraite = $militaire->calculerDateRetraite();
             
-            // Vérifier si le militaire est proposable pour cette période
-            $estProposable = $this->verifierProposablePourPeriode($militaire, $datePeriode);
-            
-            if ($estProposable) {
-                $gradeCible = $this->getGradeCible($militaire);
-                if ($gradeCible) {
-                    $proposables[] = [
+            if ($dateRetraite) {
+                $dateRetraiteCarbon = Carbon::parse($dateRetraite);
+                
+                // Vérifier si la date de retraite est dans l'année cible
+                if ($dateRetraiteCarbon->between($dateDebut, $dateFin)) {
+                    $retraites[] = [
                         'id' => $militaire->id,
                         'matricule' => $militaire->matricule,
                         'nom' => $militaire->nom,
                         'prenom' => $militaire->prenom,
                         'grade_actuel' => $militaire->grade_actuel,
-                        'grade_cible' => $gradeCible,
-                        'date_proposition' => $datePeriode->format('Y-m-d'),
-                        'date_derniere_promotion' => $militaire->date_derniere_promotion ? Carbon::parse($militaire->date_derniere_promotion)->format('d/m/Y') : null,
+                        'date_retraite' => $dateRetraiteCarbon->format('Y-m-d'),
+                        'date_retraite_formatted' => $dateRetraiteCarbon->format('d/m/Y'),
                     ];
-                    $militairesDejaProposables[] = $militaire->id;
                 }
             }
         }
         
-        $resultats[$key] = [
-            'nom' => $periode['nom'],
-            'date' => $datePeriode->format('Y-m-d'),
-            'date_formatted' => $datePeriode->format('d/m/Y'),
-            'couleur' => $periode['couleur'],
-            'couleur_texte' => $periode['couleur_texte'],
-            'couleur_border' => $periode['couleur_border'],
-            'icon' => $periode['icon'],
-            'proposables' => $proposables,
-            'count' => count($proposables),
-            'est_passee' => $estPeriodePassee
+        // Trier par date de retraite
+        usort($retraites, function($a, $b) {
+            return $a['date_retraite'] <=> $b['date_retraite'];
+        });
+        
+        return [
+            'annee' => $anneeCible,
+            'retraites' => $retraites,
+            'total' => count($retraites)
+        ];
+    }
+
+    /**
+     * Calcule les militaires proposables pour une année donnée (N ou N+1)
+     * Périodes: Janvier, Avril, Octobre de l'année cible
+     */
+    private function calculerProposablesPourAnnee($militairesActifs, $decalageAnnees, $idsExclus = [])
+    {
+        $aujourdhui = Carbon::now();
+        $anneeCible = $aujourdhui->year + $decalageAnnees;
+        
+        // Définir les 3 périodes de l'année cible avec leurs couleurs distinctes
+        $periodes = [
+            'janvier' => [
+                'nom' => 'Proposition du 1er Janvier',
+                'date' => Carbon::create($anneeCible, 1, 1),
+                'ordre' => 1,
+                'couleur' => 'bg-purple-500',
+                'couleur_texte' => 'text-purple-500',
+                'couleur_border' => 'border-purple-500',
+                'icon' => 'pi-calendar-plus'
+            ],
+            'avril' => [
+                'nom' => 'Proposition du 1er Avril',
+                'date' => Carbon::create($anneeCible, 4, 1),
+                'ordre' => 2,
+                'couleur' => 'bg-green-500',
+                'couleur_texte' => 'text-green-500',
+                'couleur_border' => 'border-green-500',
+                'icon' => 'pi-calendar-plus'
+            ],
+            'octobre' => [
+                'nom' => 'Proposition du 1er Octobre',
+                'date' => Carbon::create($anneeCible, 10, 1),
+                'ordre' => 3,
+                'couleur' => 'bg-blue-500',
+                'couleur_texte' => 'text-blue-500',
+                'couleur_border' => 'border-blue-500',
+                'icon' => 'pi-calendar'
+            ]
         ];
         
-        $totalProposables += count($proposables);
-    }
-    
-    // Réorganiser dans l'ordre chronologique (Janvier, Avril, Octobre)
-    $ordrePeriodes = ['janvier', 'avril', 'octobre'];
-    $resultatsOrdonnes = [];
-    foreach ($ordrePeriodes as $periodeKey) {
-        if (isset($resultats[$periodeKey])) {
-            $resultatsOrdonnes[$periodeKey] = $resultats[$periodeKey];
+        $resultats = [];
+        $totalProposables = 0;
+        $militairesDejaProposables = [];
+        
+        foreach ($periodes as $key => $periode) {
+            $proposables = [];
+            $datePeriode = $periode['date'];
+            $estPeriodePassee = $datePeriode < $aujourdhui;
+            
+            foreach ($militairesActifs as $militaire) {
+                // Exclure les militaires déjà proposables dans l'année précédente
+                if (in_array($militaire->id, $idsExclus)) {
+                    continue;
+                }
+                
+                // Exclure les militaires déjà proposables dans une période antérieure de la même année
+                if (in_array($militaire->id, $militairesDejaProposables)) {
+                    continue;
+                }
+                
+                // Vérifier si le militaire est proposable pour cette période
+                $estProposable = $this->verifierProposablePourPeriode($militaire, $datePeriode);
+                
+                if ($estProposable) {
+                    $gradeCible = $this->getGradeCible($militaire);
+                    if ($gradeCible) {
+                        $proposables[] = [
+                            'id' => $militaire->id,
+                            'matricule' => $militaire->matricule,
+                            'nom' => $militaire->nom,
+                            'prenom' => $militaire->prenom,
+                            'grade_actuel' => $militaire->grade_actuel,
+                            'grade_cible' => $gradeCible,
+                            'date_proposition' => $datePeriode->format('Y-m-d'),
+                            'date_derniere_promotion' => $militaire->date_derniere_promotion ? Carbon::parse($militaire->date_derniere_promotion)->format('d/m/Y') : null,
+                        ];
+                        $militairesDejaProposables[] = $militaire->id;
+                    }
+                }
+            }
+            
+            $resultats[$key] = [
+                'nom' => $periode['nom'],
+                'date' => $datePeriode->format('Y-m-d'),
+                'date_formatted' => $datePeriode->format('d/m/Y'),
+                'couleur' => $periode['couleur'],
+                'couleur_texte' => $periode['couleur_texte'],
+                'couleur_border' => $periode['couleur_border'],
+                'icon' => $periode['icon'],
+                'proposables' => $proposables,
+                'count' => count($proposables),
+                'est_passee' => $estPeriodePassee
+            ];
+            
+            $totalProposables += count($proposables);
         }
+        
+        // Réorganiser dans l'ordre chronologique (Janvier, Avril, Octobre)
+        $ordrePeriodes = ['janvier', 'avril', 'octobre'];
+        $resultatsOrdonnes = [];
+        foreach ($ordrePeriodes as $periodeKey) {
+            if (isset($resultats[$periodeKey])) {
+                $resultatsOrdonnes[$periodeKey] = $resultats[$periodeKey];
+            }
+        }
+        $resultatsOrdonnes['total'] = $totalProposables;
+        $resultatsOrdonnes['annee'] = $anneeCible;
+        
+        return $resultatsOrdonnes;
     }
-    $resultatsOrdonnes['total'] = $totalProposables;
-    $resultatsOrdonnes['annee'] = $anneeCible;
-    
-    return $resultatsOrdonnes;
-}
+
     /**
      * Vérifie si un militaire est proposable pour une période spécifique
      */
     private function verifierProposablePourPeriode($militaire, $dateProposition)
     {
-        // Calculer la date à laquelle les conditions sont remplies
         $dateConditionsRemplies = $this->getDateConditionsRemplies($militaire, $dateProposition);
         
         if (!$dateConditionsRemplies) {
             return false;
         }
         
-        // Le militaire est proposable si la date des conditions est atteinte avant ou à la date de proposition
-        // Et que la date des conditions est postérieure à la dernière date de proposition traitée
         return $dateConditionsRemplies <= $dateProposition;
     }
 
@@ -274,21 +297,18 @@ private function calculerProposablesPourAnnee($militairesActifs, $decalageAnnees
         $dateEntreeService = $militaire->date_entree_service;
         $certificatsObtenus = $militaire->certificats->pluck('niveau_certificat')->toArray();
         
-        // Récupérer le nombre d'années requis pour la promotion
         $anneesRequises = $this->getAnneesRequisesPourPromotion($grade, $militaire);
         
         if (!$anneesRequises) {
             return null;
         }
         
-        // La date de référence est la date de dernière promotion ou la date d'entrée en service
         $dateReference = $dateDernierePromotion ?? $dateEntreeService;
         
         if (!$dateReference) {
             return null;
         }
         
-        // Calculer la date à laquelle les années requises sont atteintes
         $dateConditionsRemplies = Carbon::parse($dateReference)->addYears($anneesRequises);
         
         return $dateConditionsRemplies;
@@ -418,7 +438,6 @@ private function calculerProposablesPourAnnee($militairesActifs, $decalageAnnees
     {
         $militairesActifs = Militaire::where('statut', 'actif')->with('certificats')->get();
         
-        // D'abord calculer l'année N pour connaître les exclus
         $proposablesAnneeN = $this->calculerProposablesPourAnnee($militairesActifs, 0);
         $idsExclus = [];
         foreach (['janvier', 'avril', 'octobre'] as $periode) {
@@ -433,6 +452,32 @@ private function calculerProposablesPourAnnee($militairesActifs, $decalageAnnees
         $proposablesAnneeN1 = $this->calculerProposablesPourAnnee($militairesActifs, 1, $idsExclus);
         
         return Excel::download(new ProposablesAnneeN1Export($proposablesAnneeN1), 'proposables_annee_' . $proposablesAnneeN1['annee'] . '_' . Carbon::now()->format('Y_m_d') . '.xlsx');
+    }
+
+    /**
+     * Exporte les retraites pour l'année N
+     */
+    public function exportRetraitesAnneeN()
+    {
+        $militairesActifs = Militaire::where('statut', 'actif')->with('certificats')->get();
+        $retraitesAnneeN = $this->calculerRetraitesPourAnnee($militairesActifs, 0);
+        
+        return Excel::download(new RetraitesAnneeNExport($retraitesAnneeN), 'retraites_annee_' . $retraitesAnneeN['annee'] . '_' . Carbon::now()->format('Y_m_d') . '.xlsx');
+    }
+
+    /**
+     * Exporte les retraites pour l'année N+1
+     */
+    public function exportRetraitesAnneeN1()
+    {
+        $militairesActifs = Militaire::where('statut', 'actif')->with('certificats')->get();
+        
+        $retraitesAnneeN = $this->calculerRetraitesPourAnnee($militairesActifs, 0);
+        $idsExclus = collect($retraitesAnneeN['retraites'])->pluck('id')->toArray();
+        
+        $retraitesAnneeN1 = $this->calculerRetraitesPourAnnee($militairesActifs, 1, $idsExclus);
+        
+        return Excel::download(new RetraitesAnneeN1Export($retraitesAnneeN1), 'retraites_annee_' . $retraitesAnneeN1['annee'] . '_' . Carbon::now()->format('Y_m_d') . '.xlsx');
     }
 
     /**

@@ -9,7 +9,7 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <!-- Statistiques Cards -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
                             <Card v-for="stat in statistiquesCards" :key="stat.label" :class="stat.colorClass" class="text-white">
                                 <template #title>
                                     <div class="flex items-center gap-2">
@@ -74,7 +74,7 @@
                                                 <Tag :value="slotProps.data.matricule" severity="info" />
                                             </template>
                                         </Column>
-                                        <Column field="nom_complet" header="Nom" sortable>
+                                        <Column field="nom_complet" header="Nom et Prenom"  sortable>
                                             <template #body="slotProps">
                                                 <div class="font-medium whitespace-nowrap">{{ slotProps.data.nom_complet }}</div>
                                             </template>
@@ -151,7 +151,7 @@
                                                 <Tag :value="slotProps.data.matricule" severity="info" />
                                             </template>
                                         </Column>
-                                        <Column field="nom_complet" header="Nom" sortable>
+                                        <Column field="nom_complet" header="Nom et Prenom"  sortable>
                                             <template #body="slotProps">
                                                 <div class="font-medium whitespace-nowrap">{{ slotProps.data.nom_complet }}</div>
                                             </template>
@@ -177,9 +177,130 @@
                             </Card>
                         </div>
 
-                        <!-- Alertes et Retraites -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                            <!-- Alertes récentes -->
+                        <!-- Retraites Année N -->
+                        <div class="mb-12">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Retraites - Année {{ retraitesAnneeN.annee }}</h3>
+                                    <p class="text-sm text-gray-500">Militaires qui atteignent leur retraite entre le 1er janvier et le 31 décembre {{ retraitesAnneeN.annee }}</p>
+                                </div>
+                                <Button label="Exporter en Excel" 
+                                        icon="pi pi-file-excel" 
+                                        class="p-button-success p-button-sm"
+                                        @click="exportRetraitesAnneeN" />
+                            </div>
+                            
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2">
+                                        <i class="pi pi-calendar text-red-500"></i>
+                                        <span>Liste des retraites - Année {{ retraitesAnneeN.annee }}</span>
+                                        <Tag :value="retraitesAnneeN.total" severity="danger" />
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <DataTable :value="retraitesAnneeN.retraites" 
+                                               stripedRows 
+                                               responsiveLayout="scroll"
+                                               class="p-datatable-sm"
+                                               :rows="10"
+                                               paginator
+                                               :rowsPerPageOptions="[10, 20, 50, 100]"
+                                               sortField="date_retraite"
+                                               :sortOrder="1">
+                                        <Column field="matricule" header="Matricule" sortable>
+                                            <template #body="slotProps">
+                                                <Tag :value="slotProps.data.matricule" severity="info" />
+                                            </template>
+                                        </Column>
+                                        <Column field="nom" header="Nom et Prenom"  sortable>
+                                            <template #body="slotProps">
+                                                {{ slotProps.data.nom }} {{ slotProps.data.prenom }}
+                                            </template>
+                                        </Column>
+                                        <Column field="grade_actuel" header="Grade actuel" sortable></Column>
+                                        <Column field="date_retraite_formatted" header="Date de retraite" sortable>
+                                            <template #body="slotProps">
+                                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                                    <i class="pi pi-calendar"></i>
+                                                    <span>{{ slotProps.data.date_retraite_formatted }}</span>
+                                                </div>
+                                            </template>
+                                        </Column>
+                                        <template #empty>
+                                            <div class="text-center p-8 text-gray-500">
+                                                <i class="pi pi-info-circle text-4xl mb-2"></i>
+                                                <p>Aucune retraite pour l'année {{ retraitesAnneeN.annee }}</p>
+                                            </div>
+                                        </template>
+                                    </DataTable>
+                                </template>
+                            </Card>
+                        </div>
+
+                        <!-- Retraites Année N+1 -->
+                        <div class="mb-12">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Retraites - Année {{ retraitesAnneeN1.annee }}</h3>
+                                    <p class="text-sm text-gray-500">Militaires qui atteignent leur retraite entre le 1er janvier et le 31 décembre {{ retraitesAnneeN1.annee }}</p>
+                                </div>
+                                <Button label="Exporter en Excel" 
+                                        icon="pi pi-file-excel" 
+                                        class="p-button-success p-button-sm"
+                                        @click="exportRetraitesAnneeN1" />
+                            </div>
+                            
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2">
+                                        <i class="pi pi-calendar-plus text-orange-500"></i>
+                                        <span>Liste des retraites - Année {{ retraitesAnneeN1.annee }}</span>
+                                        <Tag :value="retraitesAnneeN1.total" severity="danger" />
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <DataTable :value="retraitesAnneeN1.retraites" 
+                                               stripedRows 
+                                               responsiveLayout="scroll"
+                                               class="p-datatable-sm"
+                                               :rows="10"
+                                               paginator
+                                               :rowsPerPageOptions="[10, 20, 50, 100]"
+                                               sortField="date_retraite"
+                                               :sortOrder="1">
+                                        <Column field="matricule" header="Matricule" sortable>
+                                            <template #body="slotProps">
+                                                <Tag :value="slotProps.data.matricule" severity="info" />
+                                            </template>
+                                        </Column>
+                                        <Column field="nom" header="Nom et Prenom" sortable>
+                                            <template #body="slotProps">
+                                                {{ slotProps.data.nom }} {{ slotProps.data.prenom }}
+                                            </template>
+                                        </Column>
+                                        <Column field="grade_actuel" header="Grade actuel" sortable></Column>
+                                        <Column field="date_retraite_formatted" header="Date de retraite" sortable>
+                                            <template #body="slotProps">
+                                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                                    <i class="pi pi-calendar"></i>
+                                                    <span>{{ slotProps.data.date_retraite_formatted }}</span>
+                                                </div>
+                                            </template>
+                                        </Column>
+                                        <template #empty>
+                                            <div class="text-center p-8 text-gray-500">
+                                                <i class="pi pi-info-circle text-4xl mb-2"></i>
+                                                <p>Aucune retraite pour l'année {{ retraitesAnneeN1.annee }}</p>
+                                            </div>
+                                        </template>
+                                    </DataTable>
+                                </template>
+                            </Card>
+                        </div>
+
+                        <!-- Alertes récentes -->
+                        <div class="mb-8">
                             <Card>
                                 <template #title>
                                     <div class="flex items-center gap-2">
@@ -219,46 +340,6 @@
                                         <i class="pi pi-check-circle text-4xl mb-2 text-green-500"></i>
                                         <p>Aucune alerte pour le moment</p>
                                     </div>
-                                </template>
-                            </Card>
-
-                            <!-- Prochaines retraites -->
-                            <Card>
-                                <template #title>
-                                    <div class="flex items-center gap-2">
-                                        <i class="pi pi-calendar"></i>
-                                        <span>Prochaines retraites ({{ militairesProchesRetraite.length }})</span>
-                                    </div>
-                                </template>
-                                <template #content>
-                                    <DataTable :value="militairesProchesRetraite" 
-                                               stripedRows 
-                                               responsiveLayout="scroll"
-                                               class="p-datatable-sm">
-                                        <Column field="matricule" header="Matricule">
-                                            <template #body="slotProps">
-                                                <Tag :value="slotProps.data.matricule" severity="info" />
-                                            </template>
-                                        </Column>
-                                        <Column field="nom" header="Nom">
-                                            <template #body="slotProps">
-                                                {{ slotProps.data.nom }} {{ slotProps.data.prenom }}
-                                            </template>
-                                        </Column>
-                                        <Column field="grade_actuel" header="Grade"></Column>
-                                        <Column header="Mois restants">
-                                            <template #body="slotProps">
-                                                <Tag :value="slotProps.data.mois_restants_formate" 
-                                                     :severity="getMoisRestantsSeverity(slotProps.data.mois_restants)" />
-                                            </template>
-                                        </Column>
-                                        <template #empty>
-                                            <div class="text-center p-4 text-gray-500">
-                                                <i class="pi pi-info-circle mr-2"></i>
-                                                Aucune retraite proche
-                                            </div>
-                                        </template>
-                                    </DataTable>
                                 </template>
                             </Card>
                         </div>
@@ -330,7 +411,8 @@ import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
     alertesNonVues: Array,
-    militairesProchesRetraite: Array,
+    retraitesAnneeN: Object,
+    retraitesAnneeN1: Object,
     proposablesAnneeN: Object,
     proposablesAnneeN1: Object,
     statistiques: Object,
@@ -369,10 +451,16 @@ const statistiquesCards = computed(() => [
         colorClass: 'bg-gradient-to-r from-yellow-500 to-yellow-700'
     },
     { 
-        label: 'Retraites Proches', 
-        value: props.statistiques.prochaines_retraites, 
+        label: `Retraites ${props.retraitesAnneeN?.annee || anneeN.value}`, 
+        value: props.statistiques.total_retraites_n || 0, 
         icon: 'pi pi-calendar',
         colorClass: 'bg-gradient-to-r from-red-500 to-red-700'
+    },
+    { 
+        label: `Retraites ${props.retraitesAnneeN1?.annee || anneeN1.value}`, 
+        value: props.statistiques.total_retraites_n1 || 0, 
+        icon: 'pi pi-calendar',
+        colorClass: 'bg-gradient-to-r from-orange-500 to-orange-700'
     },
     { 
         label: `Proposables ${anneeN.value}`, 
@@ -448,7 +536,7 @@ const allProposablesN1 = computed(() => {
 const totalProposablesN = computed(() => allProposablesN.value.length);
 const totalProposablesN1 = computed(() => allProposablesN1.value.length);
 
-// Couleurs des badges par période avec white-space nowrap
+// Couleurs des badges par période
 const getPeriodeColor = (periodeKey) => {
     const colors = {
         'janvier': 'bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-block',
@@ -481,13 +569,6 @@ const getJoursRestantsSeverity = (jours) => {
     if (jours <= 7) return 'danger';
     if (jours <= 30) return 'warning';
     return 'info';
-};
-
-const getMoisRestantsSeverity = (mois) => {
-    if (mois <= 0) return 'danger';
-    if (mois <= 1) return 'warning';
-    if (mois <= 3) return 'info';
-    return 'secondary';
 };
 
 const getAlerteClass = (type) => {
@@ -537,6 +618,14 @@ const exportProposablesAnneeN = () => {
 
 const exportProposablesAnneeN1 = () => {
     window.open(route('dashboard.export-proposables-annee-n1'), '_blank');
+};
+
+const exportRetraitesAnneeN = () => {
+    window.open(route('dashboard.export-retraites-annee-n'), '_blank');
+};
+
+const exportRetraitesAnneeN1 = () => {
+    window.open(route('dashboard.export-retraites-annee-n1'), '_blank');
 };
 </script>
 

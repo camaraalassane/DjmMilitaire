@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Certificat;
+use Illuminate\Database\Seeder;
+use Carbon\Carbon;
 
 class CertificatSeeder extends Seeder
 {
@@ -13,295 +14,203 @@ class CertificatSeeder extends Seeder
     public function run(): void
     {
         $certificats = [
-            // Certificat d'Aptitude Technique Niveau 1 (CAT1) - pour devenir Caporal
             [
+                'id' => 1,
                 'nom_certificat' => 'Certificat d\'Aptitude Technique Niveau 1',
                 'niveau_certificat' => 'CAT1',
-                'grade_associe' => 'Caporal',
-                'conditions' => json_encode([
-                    'grade_requis' => 'Soldat 1',
-                    'anciennete_min' => 5,
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 5,
-                'certificat_precedent' => null,
-                'duree_certificat_precedent' => null
+                'grade_obtenu' => 'Caporal',
+                'conditions' => '{"grade_requis":"Soldat 1","anciennete_min":5,"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 5,
+                'certificat_requis' => null,
+                'duree_certificat_requis' => null,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Certificat d'Aptitude Technique Niveau 2 (CAT2) - pour devenir Sergent
             [
+                'id' => 2,
                 'nom_certificat' => 'Certificat d\'Aptitude Technique Niveau 2',
                 'niveau_certificat' => 'CAT2',
-                'grade_associe' => 'Sergent',
-                'conditions' => json_encode([
-                    'certificat_precedent' => 'CAT1',
-                    'duree_certificat_precedent' => 3,
-                    'grade_requis' => 'Caporal',
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 3, // anciennete dans le grade de Caporal
-                'certificat_precedent' => 'CAT1',
-                'duree_certificat_precedent' => 3
+                'grade_obtenu' => 'Sergent',
+                'conditions' => '{"certificat_precedent":"CAT1","duree_certificat_precedent":3,"grade_requis":"Caporal","pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 3,
+                'certificat_requis' => 'CAT1',
+                'duree_certificat_requis' => 3,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Certificat d'Instruction d'Armes (CIA) - pour devenir Sergent-Chef
             [
+                'id' => 3,
                 'nom_certificat' => 'Certificat d\'Instruction d\'Armes',
                 'niveau_certificat' => 'CIA',
-                'grade_associe' => 'Sergent-Chef',
-                'conditions' => json_encode([
-                    'permis_conduire' => true,
-                    'anciennete_sous_officier' => 3,
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 3,
-                'certificat_precedent' => 'CAT2',
-                'duree_certificat_precedent' => null
+                'grade_obtenu' => 'Sergent-Chef',
+                'conditions' => '{"permis_conduire":true,"anciennete_sous_officier":3,"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 3,
+                'certificat_requis' => 'CAT2',
+                'duree_certificat_requis' => null,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Brevet d'Aptitude Niveau 1 (BA1) - pour devenir Adjudant
             [
+                'id' => 4,
                 'nom_certificat' => 'Brevet d\'Aptitude Niveau 1',
                 'niveau_certificat' => 'BA1',
-                'grade_associe' => 'Adjudant',
-                'conditions' => json_encode([
-                    'grade_min' => 'Sergent-Chef',
-                    'certificat_cia' => true,
-                    'duree_cia' => 3,
-                    'anciennete_service' => 8,
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 8,
-                'certificat_precedent' => 'CIA',
-                'duree_certificat_precedent' => 3
+                'grade_obtenu' => 'Adjudant',
+                'conditions' => '{"grade_min":"Sergent-Chef","certificat_cia":true,"duree_cia":3,"anciennete_service":8,"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 8,
+                'certificat_requis' => 'CIA',
+                'duree_certificat_requis' => 3,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Brevet d'Aptitude Niveau 2 (BA2) - pour devenir Adjudant-Chef
             [
+                'id' => 5,
                 'nom_certificat' => 'Brevet d\'Aptitude Niveau 2',
                 'niveau_certificat' => 'BA2',
-                'grade_associe' => 'Adjudant-Chef',
-                'conditions' => json_encode([
-                    'grade_min' => 'Adjudant',
-                    'certificat_ba1' => true,
-                    'duree_ba1' => 3,
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 3,
-                'certificat_precedent' => 'BA1',
-                'duree_certificat_precedent' => 3
+                'grade_obtenu' => 'Adjudant-Chef',
+                'conditions' => '{"grade_min":"Adjudant","certificat_ba1":true,"duree_ba1":3,"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 3,
+                'certificat_requis' => 'BA1',
+                'duree_certificat_requis' => 3,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Brevet Militaire Professionnel niveau 2 (BMP1) - équivalent à BA2 (avec CIA)
             [
+                'id' => 6,
                 'nom_certificat' => 'Brevet Militaire Professionnel niveau 1',
                 'niveau_certificat' => 'BMP1',
-                'grade_associe' => 'Adjudant-Chef',
-                'conditions' => json_encode([
-                    'grade_min' => 'Adjudant',
-                    'certificat_requis' => 'BA1',
-                    'duree_certificat' => 3,
-                    'certificat_complementaire' => 'CIA', // Nécessite également CIA pour l'équivalence
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 3,
-                'certificat_precedent' => 'BA1',
-                'duree_certificat_precedent' => 3
+                'grade_obtenu' => 'Adjudant-Chef',
+                'conditions' => '{"grade_min":"Adjudant","certificat_requis":"BA1","duree_certificat":3,"certificat_complementaire":"CIA","pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 3,
+                'certificat_requis' => 'BA1',
+                'duree_certificat_requis' => 3,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-            
-            // Brevet Militaire Professionnel niveau 2 (BMP2) - équivalent à BA2 (avec CIA)
             [
+                'id' => 7,
                 'nom_certificat' => 'Brevet Militaire Professionnel niveau 2',
                 'niveau_certificat' => 'BMP2',
-                'grade_associe' => 'Adjudant-Chef',
-                'conditions' => json_encode([
-                    'grade_min' => 'Adjudant',
-                    'certificat_requis' => 'BA1',
-                    'duree_certificat' => 3,
-                    'certificat_complementaire' => 'CIA', // Nécessite également CIA pour l'équivalence
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 3,
-                'certificat_precedent' => 'BA1',
-                'duree_certificat_precedent' => 3
+                'grade_obtenu' => 'Adjudant-Chef',
+                'conditions' => '{"grade_min":"Adjudant","certificat_requis":"BA1","duree_certificat":3,"certificat_complementaire":"CIA","pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 3,
+                'certificat_requis' => 'BA1',
+                'duree_certificat_requis' => 3,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Brevet de Spécialité (BS) - équivalent à BA2 (avec CIA)
             [
+                'id' => 8,
                 'nom_certificat' => 'Brevet de Spécialité',
                 'niveau_certificat' => 'BS',
-                'grade_associe' => 'Adjudant-Chef',
-                'conditions' => json_encode([
-                    'grade_min' => 'Adjudant',
-                    'certificat_requis' => 'BA1',
-                    'duree_certificat' => 3,
-                    'certificat_complementaire' => 'CIA',
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 3,
-                'certificat_precedent' => 'BA1',
-                'duree_certificat_precedent' => 3
+                'grade_obtenu' => 'Adjudant-Chef',
+                'conditions' => '{"grade_min":"Adjudant","certificat_requis":"BA1","duree_certificat":3,"certificat_complementaire":"CIA","pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 3,
+                'certificat_requis' => 'BA1',
+                'duree_certificat_requis' => 3,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Certificat Technique niveau 2 (CT2) - équivalent à BA2 (avec CIA)
             [
+                'id' => 9,
                 'nom_certificat' => 'Certificat Technique niveau 2',
                 'niveau_certificat' => 'CT2',
-                'grade_associe' => 'Adjudant-Chef',
-                'conditions' => json_encode([
-                    'grade_min' => 'Adjudant',
-                    'certificat_requis' => 'BA1',
-                    'duree_certificat' => 3,
-                    'certificat_complementaire' => 'CIA',
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => 3,
-                'certificat_precedent' => 'BA1',
-                'duree_certificat_precedent' => 3
+                'grade_obtenu' => 'Adjudant-Chef',
+                'conditions' => '{"grade_min":"Adjudant","certificat_requis":"BA1","duree_certificat":3,"certificat_complementaire":"CIA","pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => 3,
+                'certificat_requis' => 'BA1',
+                'duree_certificat_requis' => 3,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // ------------------------------------------------------------
-            // Formations des officiers
-            // ------------------------------------------------------------
-
-            // Cour d'Application (APLI)
             [
+                'id' => 10,
                 'nom_certificat' => 'Cour d\'Application',
                 'niveau_certificat' => 'APLI',
-                'grade_associe' => 'Lieutenant', // Après APLI, passage probable au grade de Lieutenant
-                'conditions' => json_encode([
-                    'grade_min' => 'Sous-lieutenant',
-                    'age_max' => 50,
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => null,
-                'certificat_precedent' => null,
-                'duree_certificat_precedent' => null
+                'grade_obtenu' => 'Lieutenant',
+                'conditions' => '{"grade_min":"Sous-lieutenant","age_max":50,"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => null,
+                'certificat_requis' => null,
+                'duree_certificat_requis' => null,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Cour des Capitaines / CFCU / CPO
             [
+                'id' => 11,
                 'nom_certificat' => 'Cour des Capitaines / CFCU / CPO',
                 'niveau_certificat' => 'CFCU',
-                'grade_associe' => 'Commandant', // Après CFCU, accès au grade de Commandant
-                'conditions' => json_encode([
-                    'or' => [
-                        ['certificat_requis' => 'APLI'],
-                        ['grade_min' => 'Capitaine']
-                    ],
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => null,
-                'certificat_precedent' => null,
-                'duree_certificat_precedent' => null
+                'grade_obtenu' => 'Commandant',
+                'conditions' => '{"or":[{"certificat_requis":"APLI"},{"grade_min":"Capitaine"}],"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => null,
+                'certificat_requis' => null,
+                'duree_certificat_requis' => null,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Cour d'état-major (CEM)
             [
+                'id' => 12,
                 'nom_certificat' => 'Cour d\'état-major',
                 'niveau_certificat' => 'CEM',
-                'grade_associe' => 'Lieutenant-colonel', // Après CEM, accès au grade de Lieutenant-colonel
-                'conditions' => json_encode([
-                    'or' => [
-                        ['grade_min' => 'Capitaine', 'anciennete_grade_min' => 3],
-                        ['grade_min' => 'Commandant', 'age_max' => 45]
-                    ],
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => null,
-                'certificat_precedent' => null,
-                'duree_certificat_precedent' => null
+                'grade_obtenu' => 'Lieutenant-colonel',
+                'conditions' => '{"or":[{"grade_min":"Capitaine","anciennete_grade_min":3},{"grade_min":"Commandant","age_max":45}],"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => null,
+                'certificat_requis' => null,
+                'duree_certificat_requis' => null,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // Certificat d'état-major
             [
+                'id' => 13,
                 'nom_certificat' => 'Certificat d\'état-major',
                 'niveau_certificat' => 'CERT_EM',
-                'grade_associe' => 'Colonel', // Après Certificat EM, accès au grade de Colonel
-                'conditions' => json_encode([
-                    'grade_min' => 'Commandant',
-                    'age_comparison' => '>', // strictement supérieur à 45 ans
-                    'age_min' => 45,
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => null,
-                'certificat_precedent' => null,
-                'duree_certificat_precedent' => null
+                'grade_obtenu' => 'Colonel',
+                'conditions' => '{"grade_min":"Commandant","age_comparison":">","age_min":45,"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => null,
+                'certificat_requis' => null,
+                'duree_certificat_requis' => null,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
-            // École de guerre / Brevet Supérieur de Second Degré
             [
+                'id' => 14,
                 'nom_certificat' => 'École de guerre / Brevet Supérieur de Second Degré',
                 'niveau_certificat' => 'ECOLE_GUERRE',
-                'grade_associe' => 'Colonel', // Après École de guerre, accès au grade de Colonel ou supérieur
-                'conditions' => json_encode([
-                    'grade_min' => 'Lieutenant-colonel',
-                    'anciennete_grade_min' => 2,
-                    'age_max' => 53,
-                    'pas_de_probleme_disciplinaire' => true,
-                    'pas_de_probleme_judiciaire' => true,
-                    'pas_deserteur' => true
-                ]),
-                'anciennete_requise' => null,
-                'certificat_precedent' => null,
-                'duree_certificat_precedent' => null
+                'grade_obtenu' => 'Colonel',
+                'conditions' => '{"grade_min":"Lieutenant-colonel","anciennete_grade_min":2,"age_max":53,"pas_de_probleme_disciplinaire":true,"pas_de_probleme_judiciaire":true,"pas_deserteur":true}',
+                'duree_validite' => null,
+                'certificat_requis' => null,
+                'duree_certificat_requis' => null,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
-
             [
+                'id' => 15,
                 'nom_certificat' => 'École d\'État-Major (ESM)',
                 'niveau_certificat' => 'ESM',
-                'grade_associe' => 'Officier supérieur',
-                'conditions' => json_encode([
-                    'grade_min' => 'Capitaine',
-                    'anciennete_service' => 10,
-                ]),
-                'anciennete_requise' => 10,
-                'certificat_precedent' => null,
-                'duree_certificat_precedent' => null,
+                'grade_obtenu' => 'Officier supérieur',
+                'conditions' => '{"grade_min":"Capitaine","anciennete_service":10}',
+                'duree_validite' => 10,
+                'certificat_requis' => null,
+                'duree_certificat_requis' => null,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
             [
+                'id' => 16,
                 'nom_certificat' => 'Cours supérieur d\'état-major',
                 'niveau_certificat' => 'CSEM',
-                'grade_associe' => 'Lieutenant-colonel',
-                'conditions' => json_encode([
-                    'grade_min' => 'Commandant',
-                    'certificat_precedent' => 'ESM',
-                ]),
-                'anciennete_requise' => 5,
-                'certificat_precedent' => 'ESM',
-                'duree_certificat_precedent' => 3,
+                'grade_obtenu' => 'Lieutenant-colonel',
+                'conditions' => '{"grade_min":"Commandant","certificat_precedent":"ESM"}',
+                'duree_validite' => 5,
+                'certificat_requis' => 'ESM',
+                'duree_certificat_requis' => 3,
+                'created_at' => Carbon::parse('2026-03-07 02:41:21'),
+                'updated_at' => Carbon::parse('2026-03-07 02:41:21')
             ],
         ];
 
         foreach ($certificats as $certificat) {
             Certificat::updateOrCreate(
-                ['niveau_certificat' => $certificat['niveau_certificat']],
+                ['id' => $certificat['id']],
                 $certificat
             );
         }
