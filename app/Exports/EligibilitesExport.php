@@ -2,28 +2,22 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Events\AfterSheet;
-use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Illuminate\Support\Collection;
 
 class EligibilitesExport implements WithMultipleSheets
 {
-    protected $eligibilites;
+    protected $data;
     protected $type;
 
-    public function __construct($eligibilites, $type = 'all')
+    public function __construct($data, $type = 'all')
     {
-        $this->eligibilites = $eligibilites;
+        $this->data = $data;
         $this->type = $type;
     }
 
@@ -31,47 +25,40 @@ class EligibilitesExport implements WithMultipleSheets
     {
         $sheets = [];
 
-        if ($this->type === 'all') {
-            // Grouper les promotions par grade cible
-            $promotionsGrouped = [];
-            foreach ($this->eligibilites['promotions'] ?? [] as $item) {
-                $key = $item['grade_cible'] ?? 'Autre';
-                if (!isset($promotionsGrouped[$key])) {
-                    $promotionsGrouped[$key] = [];
+        if ($this->type === 'promotions' || $this->type === 'all') {
+            $promotionsByGrade = [];
+            foreach ($this->data['promotions'] ?? [] as $promo) {
+                $gradeCible = $promo['grade_cible'];
+                if (!isset($promotionsByGrade[$gradeCible])) {
+                    $promotionsByGrade[$gradeCible] = [];
                 }
-                $promotionsGrouped[$key][] = $item;
+                $promotionsByGrade[$gradeCible][] = $promo;
             }
+            
+            foreach ($promotionsByGrade as $gradeCible => $promotions) {
+                $sheets[] = new PromotionSheet($gradeCible, $promotions);
+            }
+        }
 
-            // Grouper les formations par nom
-            $formationsGrouped = [];
-            foreach ($this->eligibilites['formations'] ?? [] as $item) {
-                $key = $item['nom_formation'] ?? 'Autre';
-                if (!isset($formationsGrouped[$key])) {
-                    $formationsGrouped[$key] = [];
+        if ($this->type === 'formations' || $this->type === 'all') {
+            $formationsByName = [];
+            foreach ($this->data['formations'] ?? [] as $formation) {
+                $nomFormation = $formation['nom_formation'];
+                if (!isset($formationsByName[$nomFormation])) {
+                    $formationsByName[$nomFormation] = [];
                 }
-                $formationsGrouped[$key][] = $item;
+                $formationsByName[$nomFormation][] = $formation;
             }
+            
+            foreach ($formationsByName as $nomFormation => $formations) {
+                $sheets[] = new FormationSheet($nomFormation, $formations);
+            }
+        }
 
-            // Créer une feuille pour chaque groupe de promotions
-            foreach ($promotionsGrouped as $gradeCible => $items) {
-                $sheets[] = new PromotionSheet($items, $gradeCible);
+        if ($this->type === 'retraites' || $this->type === 'all') {
+            if (!empty($this->data['retraites'])) {
+                $sheets[] = new RetraiteSheet($this->data['retraites']);
             }
-
-            // Créer une feuille pour chaque groupe de formations
-            foreach ($formationsGrouped as $nomFormation => $items) {
-                $sheets[] = new FormationSheet($items, $nomFormation);
-            }
-
-            // Créer une feuille pour les retraites
-            if (!empty($this->eligibilites['retraites'])) {
-                $sheets[] = new RetraitesSheet($this->eligibilites['retraites']);
-            }
-        } elseif ($this->type === 'promotions') {
-            $sheets[] = new PromotionsSheet($this->eligibilites);
-        } elseif ($this->type === 'formations') {
-            $sheets[] = new FormationsSheet($this->eligibilites);
-        } elseif ($this->type === 'retraites') {
-            $sheets[] = new RetraitesSheet($this->eligibilites);
         }
 
         return $sheets;
@@ -79,540 +66,225 @@ class EligibilitesExport implements WithMultipleSheets
 }
 
 /**
- * Feuille pour un groupe de promotions
+ * Feuille pour les promotions par grade cible
  */
-class PromotionSheet implements FromCollection, WithHeadings, WithStyles, WithColumnWidths, WithTitle, WithEvents
+class PromotionSheet implements FromCollection, WithHeadings, WithColumnWidths, WithStyles
 {
-    protected $items;
     protected $gradeCible;
+    protected $promotions;
 
-    public function __construct($items, $gradeCible)
+    public function __construct($gradeCible, $promotions)
     {
-        $this->items = $items;
         $this->gradeCible = $gradeCible;
+        $this->promotions = $promotions;
     }
 
     public function collection()
     {
-        $rows = new Collection();
-        
-        foreach ($this->items as $item) {
-            $rows->push([
-                $item['type'] ?? '',
-                $item['grade_cible'] ?? '',
-                $item['militaire']['matricule'] ?? '',
-                $item['militaire']['nom'] ?? '',
-                $item['militaire']['prenom'] ?? '',
-                $item['militaire']['grade_actuel'] ?? '',
-                $item['message'] ?? '',
-                $item['date_estimation'] ? date('d/m/Y', strtotime($item['date_estimation'])) : '',
-            ]);
+        $rows = [];
+        foreach ($this->promotions as $item) {
+            $rows[] = [
+                $item['militaire']['matricule'],
+                $item['militaire']['nom'],
+                $item['militaire']['prenom'],
+                $item['militaire']['grade_actuel'],
+                $item['grade_cible'],  // GRADE CIBLE
+                $item['annee_proposition'] ?? $this->extractAnnee($item['date_estimation']),
+                $this->formatDate($item['date_anciennete'] ?? ''),
+            ];
         }
-        
-        return $rows;
+        return new Collection($rows);
     }
 
     public function headings(): array
     {
         return [
-            'TYPE',
-            'GRADE CIBLE',
             'MATRICULE',
             'NOM',
-            'PRÉNOM',
+            'PRENOM',
             'GRADE ACTUEL',
-            'CONDITION',
-            'DATE ESTIMATION',
+            'GRADE CIBLE',
+            'ANNEE PROPOSITION',
+            'DATE ANCIENNETE'
         ];
     }
 
     public function title(): string
     {
-        // Nettoyer le nom de la feuille (max 31 caractères)
-        $title = str_replace('/', '-', $this->gradeCible);
+        $title = "Promotion_{$this->gradeCible}";
         return substr($title, 0, 31);
-    }
-
-    public function styles(Worksheet $sheet)
-    {
-        return [
-            1 => [
-                'font' => [
-                    'bold' => true,
-                    'size' => 11,
-                    'color' => ['rgb' => 'FFFFFF'],
-                    'name' => 'Arial',
-                ],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '1E3A5F'],
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                ],
-            ],
-        ];
     }
 
     public function columnWidths(): array
     {
         return [
-            'A' => 12,
-            'B' => 18,
-            'C' => 15,
-            'D' => 20,
-            'E' => 20,
-            'F' => 18,
-            'G' => 40,
-            'H' => 18,
+            'A' => 15,  // MATRICULE
+            'B' => 20,  // NOM
+            'C' => 20,  // PRENOM
+            'D' => 25,  // GRADE ACTUEL
+            'E' => 20,  // GRADE CIBLE
+            'F' => 18,  // ANNEE PROPOSITION
+            'G' => 15,  // DATE ANCIENNETE
         ];
     }
 
-    public function registerEvents(): array
+    public function styles(Worksheet $sheet)
     {
-        return [
-            AfterSheet::class => function(AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
-                $lastRow = $sheet->getHighestRow();
-                $lastColumn = $sheet->getHighestColumn();
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFont()->setSize(11);
+        $sheet->getStyle('A1:G1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+        $sheet->getStyle('A1:G1')->getFill()->getStartColor()->setARGB('FF0284c7');
+        $sheet->getStyle('A1:G1')->getFont()->getColor()->setARGB('FFFFFFFF');
+        
+        return [];
+    }
 
-                $sheet->getStyle('A1:' . $lastColumn . $lastRow)
-                    ->applyFromArray([
-                        'borders' => [
-                            'allBorders' => [
-                                'borderStyle' => Border::BORDER_THIN,
-                                'color' => ['rgb' => 'DDDDDD'],
-                            ],
-                        ],
-                    ]);
+    private function extractAnnee($date)
+    {
+        if (!$date) return '';
+        return substr($date, 0, 4);
+    }
 
-                for ($i = 2; $i <= $lastRow; $i++) {
-                    if ($i % 2 == 0) {
-                        $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)
-                            ->applyFromArray([
-                                'fill' => [
-                                    'fillType' => Fill::FILL_SOLID,
-                                    'startColor' => ['rgb' => 'F8F9FA'],
-                                ],
-                            ]);
-                    }
-                }
-
-                $sheet->setAutoFilter('A1:' . $lastColumn . $lastRow);
-                $sheet->freezePane('A2');
-                $sheet->getRowDimension(1)->setRowHeight(25);
-            },
-        ];
+    private function formatDate($date)
+    {
+        if (!$date) return '';
+        return \Carbon\Carbon::parse($date)->format('d/m/Y');
     }
 }
 
 /**
- * Feuille pour un groupe de formations
+ * Feuille pour les formations par nom de formation
  */
-class FormationSheet implements FromCollection, WithHeadings, WithStyles, WithColumnWidths, WithTitle, WithEvents
+class FormationSheet implements FromCollection, WithHeadings, WithColumnWidths, WithStyles
 {
-    protected $items;
     protected $nomFormation;
+    protected $formations;
 
-    public function __construct($items, $nomFormation)
+    public function __construct($nomFormation, $formations)
     {
-        $this->items = $items;
         $this->nomFormation = $nomFormation;
+        $this->formations = $formations;
     }
 
     public function collection()
     {
-        $rows = new Collection();
-        
-        foreach ($this->items as $item) {
-            $rows->push([
-                $item['formation'] ?? '',
-                $item['nom_formation'] ?? '',
-                $item['militaire']['matricule'] ?? '',
-                $item['militaire']['nom'] ?? '',
-                $item['militaire']['prenom'] ?? '',
-                $item['militaire']['grade_actuel'] ?? '',
-                $item['message'] ?? '',
-                $item['date_estimation'] ? date('d/m/Y', strtotime($item['date_estimation'])) : '',
-            ]);
+        $rows = [];
+        foreach ($this->formations as $item) {
+            $rows[] = [
+                $item['militaire']['matricule'],
+                $item['militaire']['nom'],
+                $item['militaire']['prenom'],
+                $item['militaire']['grade_actuel'],
+                $item['nom_formation'],  // NOM DE LA FORMATION
+                $item['annee_proposition'] ?? $this->extractAnnee($item['date_estimation']),
+                $this->formatDate($item['date_conditions'] ?? ''),
+            ];
         }
-        
-        return $rows;
+        return new Collection($rows);
     }
 
     public function headings(): array
     {
         return [
-            'FORMATION',
-            'NOM FORMATION',
             'MATRICULE',
             'NOM',
-            'PRÉNOM',
+            'PRENOM',
             'GRADE ACTUEL',
-            'CONDITION',
-            'DATE ESTIMATION',
+            'FORMATION',
+            'ANNEE PROPOSITION',
+            'DATE CONDITIONS'
         ];
     }
 
     public function title(): string
     {
-        $title = str_replace(['/', '\\', '*', '?', ':', '[', ']'], '-', $this->nomFormation);
+        // Nettoyer le nom de la formation pour le nom de l'onglet
+        $title = $this->nomFormation;
+        $title = str_replace(['Certificat d\'Aptitude Technique Niveau 1', 'Certificat d\'Aptitude Technique Niveau 2', 'Certificat d\'Instruction d\'Armes', 'Brevet d\'Aptitude Niveau 1', 'Brevet d\'Aptitude Niveau 2', 'Cour d\'Application', 'Cour des Futurs Commandants d\'Unité', 'Cour d\'État-Major', 'Certificat d\'État-Major', 'École de Guerre'], '', $title);
+        $title = preg_replace('/\s+/', ' ', $title);
+        
+        // Mapping simple
+        $mapping = [
+            'Certificat d\'Aptitude Technique Niveau 1' => 'CAT1',
+            'Certificat d\'Aptitude Technique Niveau 2' => 'CAT2',
+            'Certificat d\'Instruction d\'Armes' => 'CIA',
+            'Brevet d\'Aptitude Niveau 1' => 'BA1',
+            'Brevet d\'Aptitude Niveau 2' => 'BA2',
+            'Cour d\'Application' => 'APLI',
+            'Cour des Futurs Commandants d\'Unité' => 'CFCU',
+            'Cour d\'État-Major' => 'CEM',
+            'Certificat d\'État-Major' => 'CERT_EM',
+            'École de Guerre' => 'ECOLE_GUERRE',
+        ];
+        
+        $shortName = $mapping[$this->nomFormation] ?? $this->nomFormation;
+        $title = "Formation_" . $shortName;
         return substr($title, 0, 31);
     }
 
-    public function styles(Worksheet $sheet)
-    {
-        return [
-            1 => [
-                'font' => [
-                    'bold' => true,
-                    'size' => 11,
-                    'color' => ['rgb' => 'FFFFFF'],
-                    'name' => 'Arial',
-                ],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '1E3A5F'],
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                ],
-            ],
-        ];
-    }
-
     public function columnWidths(): array
     {
         return [
-            'A' => 12,
-            'B' => 25,
-            'C' => 15,
-            'D' => 20,
-            'E' => 20,
-            'F' => 18,
-            'G' => 40,
-            'H' => 18,
+            'A' => 15,  // MATRICULE
+            'B' => 20,  // NOM
+            'C' => 20,  // PRENOM
+            'D' => 25,  // GRADE ACTUEL
+            'E' => 35,  // FORMATION
+            'F' => 18,  // ANNEE PROPOSITION
+            'G' => 15,  // DATE CONDITIONS
         ];
-    }
-
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function(AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
-                $lastRow = $sheet->getHighestRow();
-                $lastColumn = $sheet->getHighestColumn();
-
-                $sheet->getStyle('A1:' . $lastColumn . $lastRow)
-                    ->applyFromArray([
-                        'borders' => [
-                            'allBorders' => [
-                                'borderStyle' => Border::BORDER_THIN,
-                                'color' => ['rgb' => 'DDDDDD'],
-                            ],
-                        ],
-                    ]);
-
-                for ($i = 2; $i <= $lastRow; $i++) {
-                    if ($i % 2 == 0) {
-                        $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)
-                            ->applyFromArray([
-                                'fill' => [
-                                    'fillType' => Fill::FILL_SOLID,
-                                    'startColor' => ['rgb' => 'F8F9FA'],
-                                ],
-                            ]);
-                    }
-                }
-
-                $sheet->setAutoFilter('A1:' . $lastColumn . $lastRow);
-                $sheet->freezePane('A2');
-                $sheet->getRowDimension(1)->setRowHeight(25);
-            },
-        ];
-    }
-}
-
-/**
- * Feuille pour les promotions (export simple)
- */
-class PromotionsSheet implements FromCollection, WithHeadings, WithStyles, WithColumnWidths, WithTitle, WithEvents
-{
-    protected $items;
-
-    public function __construct($items)
-    {
-        $this->items = $items;
-    }
-
-    public function collection()
-    {
-        $rows = new Collection();
-        
-        foreach ($this->items as $item) {
-            $rows->push([
-                $item['type'] ?? '',
-                $item['grade_cible'] ?? '',
-                $item['militaire']['matricule'] ?? '',
-                $item['militaire']['nom'] ?? '',
-                $item['militaire']['prenom'] ?? '',
-                $item['militaire']['grade_actuel'] ?? '',
-                $item['message'] ?? '',
-                $item['date_estimation'] ? date('d/m/Y', strtotime($item['date_estimation'])) : '',
-            ]);
-        }
-        
-        return $rows;
-    }
-
-    public function headings(): array
-    {
-        return [
-            'TYPE',
-            'GRADE CIBLE',
-            'MATRICULE',
-            'NOM',
-            'PRÉNOM',
-            'GRADE ACTUEL',
-            'CONDITION',
-            'DATE ESTIMATION',
-        ];
-    }
-
-    public function title(): string
-    {
-        return 'Promotions';
     }
 
     public function styles(Worksheet $sheet)
     {
-        return [
-            1 => [
-                'font' => [
-                    'bold' => true,
-                    'size' => 11,
-                    'color' => ['rgb' => 'FFFFFF'],
-                    'name' => 'Arial',
-                ],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '1E3A5F'],
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                ],
-            ],
-        ];
-    }
-
-    public function columnWidths(): array
-    {
-        return [
-            'A' => 12,
-            'B' => 18,
-            'C' => 15,
-            'D' => 20,
-            'E' => 20,
-            'F' => 18,
-            'G' => 40,
-            'H' => 18,
-        ];
-    }
-
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function(AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
-                $lastRow = $sheet->getHighestRow();
-                $lastColumn = $sheet->getHighestColumn();
-
-                $sheet->getStyle('A1:' . $lastColumn . $lastRow)
-                    ->applyFromArray([
-                        'borders' => [
-                            'allBorders' => [
-                                'borderStyle' => Border::BORDER_THIN,
-                                'color' => ['rgb' => 'DDDDDD'],
-                            ],
-                        ],
-                    ]);
-
-                for ($i = 2; $i <= $lastRow; $i++) {
-                    if ($i % 2 == 0) {
-                        $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)
-                            ->applyFromArray([
-                                'fill' => [
-                                    'fillType' => Fill::FILL_SOLID,
-                                    'startColor' => ['rgb' => 'F8F9FA'],
-                                ],
-                            ]);
-                    }
-                }
-
-                $sheet->setAutoFilter('A1:' . $lastColumn . $lastRow);
-                $sheet->freezePane('A2');
-                $sheet->getRowDimension(1)->setRowHeight(25);
-            },
-        ];
-    }
-}
-
-/**
- * Feuille pour les formations (export simple)
- */
-class FormationsSheet implements FromCollection, WithHeadings, WithStyles, WithColumnWidths, WithTitle, WithEvents
-{
-    protected $items;
-
-    public function __construct($items)
-    {
-        $this->items = $items;
-    }
-
-    public function collection()
-    {
-        $rows = new Collection();
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFont()->setSize(11);
+        $sheet->getStyle('A1:G1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+        $sheet->getStyle('A1:G1')->getFill()->getStartColor()->setARGB('FFF97316');
+        $sheet->getStyle('A1:G1')->getFont()->getColor()->setARGB('FFFFFFFF');
         
-        foreach ($this->items as $item) {
-            $rows->push([
-                $item['formation'] ?? '',
-                $item['nom_formation'] ?? '',
-                $item['militaire']['matricule'] ?? '',
-                $item['militaire']['nom'] ?? '',
-                $item['militaire']['prenom'] ?? '',
-                $item['militaire']['grade_actuel'] ?? '',
-                $item['message'] ?? '',
-                $item['date_estimation'] ? date('d/m/Y', strtotime($item['date_estimation'])) : '',
-            ]);
-        }
-        
-        return $rows;
+        return [];
     }
 
-    public function headings(): array
+    private function extractAnnee($date)
     {
-        return [
-            'FORMATION',
-            'NOM FORMATION',
-            'MATRICULE',
-            'NOM',
-            'PRÉNOM',
-            'GRADE ACTUEL',
-            'CONDITION',
-            'DATE ESTIMATION',
-        ];
+        if (!$date) return '';
+        return substr($date, 0, 4);
     }
 
-    public function title(): string
+    private function formatDate($date)
     {
-        return 'Formations';
-    }
-
-    public function styles(Worksheet $sheet)
-    {
-        return [
-            1 => [
-                'font' => [
-                    'bold' => true,
-                    'size' => 11,
-                    'color' => ['rgb' => 'FFFFFF'],
-                    'name' => 'Arial',
-                ],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '1E3A5F'],
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                ],
-            ],
-        ];
-    }
-
-    public function columnWidths(): array
-    {
-        return [
-            'A' => 12,
-            'B' => 25,
-            'C' => 15,
-            'D' => 20,
-            'E' => 20,
-            'F' => 18,
-            'G' => 40,
-            'H' => 18,
-        ];
-    }
-
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function(AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
-                $lastRow = $sheet->getHighestRow();
-                $lastColumn = $sheet->getHighestColumn();
-
-                $sheet->getStyle('A1:' . $lastColumn . $lastRow)
-                    ->applyFromArray([
-                        'borders' => [
-                            'allBorders' => [
-                                'borderStyle' => Border::BORDER_THIN,
-                                'color' => ['rgb' => 'DDDDDD'],
-                            ],
-                        ],
-                    ]);
-
-                for ($i = 2; $i <= $lastRow; $i++) {
-                    if ($i % 2 == 0) {
-                        $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)
-                            ->applyFromArray([
-                                'fill' => [
-                                    'fillType' => Fill::FILL_SOLID,
-                                    'startColor' => ['rgb' => 'F8F9FA'],
-                                ],
-                            ]);
-                    }
-                }
-
-                $sheet->setAutoFilter('A1:' . $lastColumn . $lastRow);
-                $sheet->freezePane('A2');
-                $sheet->getRowDimension(1)->setRowHeight(25);
-            },
-        ];
+        if (!$date) return '';
+        return \Carbon\Carbon::parse($date)->format('d/m/Y');
     }
 }
 
 /**
  * Feuille pour les retraites
  */
-class RetraitesSheet implements FromCollection, WithHeadings, WithStyles, WithColumnWidths, WithTitle, WithEvents
+class RetraiteSheet implements FromCollection, WithHeadings, WithColumnWidths, WithStyles
 {
-    protected $items;
+    protected $retraites;
 
-    public function __construct($items)
+    public function __construct($retraites)
     {
-        $this->items = $items;
+        $this->retraites = $retraites;
     }
 
     public function collection()
     {
-        $rows = new Collection();
-        
-        foreach ($this->items as $item) {
-            $rows->push([
-                $item['militaire']['matricule'] ?? '',
-                $item['militaire']['nom'] ?? '',
-                $item['militaire']['prenom'] ?? '',
-                $item['militaire']['grade_actuel'] ?? '',
-                $item['date_retraite'] ? date('d/m/Y', strtotime($item['date_retraite'])) : '',
-                $item['mois_restants'] . ' mois',
-            ]);
+        $rows = [];
+        foreach ($this->retraites as $item) {
+            $rows[] = [
+                $item['militaire']['matricule'],
+                $item['militaire']['nom'],
+                $item['militaire']['prenom'],
+                $item['militaire']['grade_actuel'],
+                $item['date_retraite_formatted'],
+                $item['mois_restants'],
+            ];
         }
-        
-        return $rows;
+        return new Collection($rows);
     }
 
     public function headings(): array
@@ -620,38 +292,16 @@ class RetraitesSheet implements FromCollection, WithHeadings, WithStyles, WithCo
         return [
             'MATRICULE',
             'NOM',
-            'PRÉNOM',
+            'PRENOM',
             'GRADE ACTUEL',
             'DATE RETRAITE',
-            'MOIS RESTANTS',
+            'MOIS RESTANTS'
         ];
     }
 
     public function title(): string
     {
-        return 'Retraites';
-    }
-
-    public function styles(Worksheet $sheet)
-    {
-        return [
-            1 => [
-                'font' => [
-                    'bold' => true,
-                    'size' => 11,
-                    'color' => ['rgb' => 'FFFFFF'],
-                    'name' => 'Arial',
-                ],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '1E3A5F'],
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                ],
-            ],
-        ];
+        return "Retraites_proches";
     }
 
     public function columnWidths(): array
@@ -660,46 +310,20 @@ class RetraitesSheet implements FromCollection, WithHeadings, WithStyles, WithCo
             'A' => 15,
             'B' => 20,
             'C' => 20,
-            'D' => 18,
+            'D' => 25,
             'E' => 15,
             'F' => 15,
         ];
     }
 
-    public function registerEvents(): array
+    public function styles(Worksheet $sheet)
     {
-        return [
-            AfterSheet::class => function(AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
-                $lastRow = $sheet->getHighestRow();
-                $lastColumn = $sheet->getHighestColumn();
-
-                $sheet->getStyle('A1:' . $lastColumn . $lastRow)
-                    ->applyFromArray([
-                        'borders' => [
-                            'allBorders' => [
-                                'borderStyle' => Border::BORDER_THIN,
-                                'color' => ['rgb' => 'DDDDDD'],
-                            ],
-                        ],
-                    ]);
-
-                for ($i = 2; $i <= $lastRow; $i++) {
-                    if ($i % 2 == 0) {
-                        $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)
-                            ->applyFromArray([
-                                'fill' => [
-                                    'fillType' => Fill::FILL_SOLID,
-                                    'startColor' => ['rgb' => 'F8F9FA'],
-                                ],
-                            ]);
-                    }
-                }
-
-                $sheet->setAutoFilter('A1:' . $lastColumn . $lastRow);
-                $sheet->freezePane('A2');
-                $sheet->getRowDimension(1)->setRowHeight(25);
-            },
-        ];
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->getFont()->setSize(11);
+        $sheet->getStyle('A1:F1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+        $sheet->getStyle('A1:F1')->getFill()->getStartColor()->setARGB('FFF97316');
+        $sheet->getStyle('A1:F1')->getFont()->getColor()->setARGB('FFFFFFFF');
+        
+        return [];
     }
 }

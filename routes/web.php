@@ -20,6 +20,7 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+    Route::get('/dashboard/section', [DashboardController::class, 'section'])->name('dashboard.section');
 Route::get('dashboard/export-proposables-annee-n', [DashboardController::class, 'exportProposablesAnneeN'])->name('dashboard.export-proposables-annee-n');
 Route::get('dashboard/export-proposables-annee-n1', [DashboardController::class, 'exportProposablesAnneeN1'])->name('dashboard.export-proposables-annee-n1');
 // Exports retraites
@@ -69,7 +70,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/militaires/{militaire}/edit', [MilitaireController::class, 'edit'])->name('militaires.edit');
     Route::put('/militaires/{militaire}', [MilitaireController::class, 'update'])->name('militaires.update');
     Route::delete('/militaires/{militaire}', [MilitaireController::class, 'destroy'])->name('militaires.destroy');
-    
+    // Routes pour les éligibilités
+    Route::get('/eligibilites/stats', [EligibiliteController::class, 'getStats'])->name('eligibilites.stats');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/eligibilites', [EligibiliteController::class, 'index'])->name('eligibilites.index');
+    Route::get('/eligibilites/filtered', [EligibiliteController::class, 'getFiltered'])->name('eligibilites.filtered');
+    Route::get('/eligibilites/export', [EligibiliteController::class, 'export'])->name('eligibilites.export');
+});
     // Routes pour l'import/export
     Route::get('/militaires/import/form', [MilitaireController::class, 'importForm'])->name('militaires.import');
     Route::post('/militaires/import', [MilitaireController::class, 'import'])->name('militaires.import.process');

@@ -47,34 +47,75 @@ class Militaire extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * Retourne la date de référence pour les calculs d'ancienneté (31 décembre de l'année en cours)
+     */
+    private static function getDateReference(): Carbon
+    {
+        $currentYear = Carbon::now()->year;
+        return Carbon::create($currentYear, 12, 31, 23, 59, 59);
+    }
+
     // Accesseurs
     public function getAgeAttribute()
     {
         return Carbon::parse($this->date_naissance)->age;
     }
 
+    /**
+     * Calcule l'ancienneté totale au 31 décembre de l'année en cours
+     */
     public function getAncienneteAttribute()
     {
-        return Carbon::parse($this->date_entree_service)->diffInYears(Carbon::now());
+        $dateReference = self::getDateReference();
+        return Carbon::parse($this->date_entree_service)->diffInYears($dateReference);
     }
 
+    /**
+     * Calcule l'ancienneté dans le grade au 31 décembre de l'année en cours
+     */
     public function getAncienneteGradeAttribute()
     {
+        $dateReference = self::getDateReference();
+        
         if ($this->date_derniere_promotion) {
-            return Carbon::parse($this->date_derniere_promotion)->diffInYears(Carbon::now());
+            return Carbon::parse($this->date_derniere_promotion)->diffInYears($dateReference);
         }
         return $this->getAncienneteAttribute();
     }
 
+    /**
+     * Ancienneté détaillée (années et mois) au 31 décembre de l'année en cours
+     */
     public function getAncienneteDetailleeAttribute()
     {
         if (!$this->date_entree_service) {
             return '';
         }
-        $diff = $this->date_entree_service->diff(now());
+        
+        $dateReference = self::getDateReference();
+        $diff = $this->date_entree_service->diff($dateReference);
         $years = $diff->y;
         $months = $diff->m;
+        
         return $years . ' ans ' . ($months > 0 ? $months . ' mois' : '');
+    }
+
+    /**
+     * Ancienneté dans le grade détaillée (années et mois) au 31 décembre de l'année en cours
+     */
+    public function getAncienneteGradeDetailleeAttribute()
+    {
+        $dateReference = self::getDateReference();
+        
+        if ($this->date_derniere_promotion) {
+            $diff = $this->date_derniere_promotion->diff($dateReference);
+            $years = $diff->y;
+            $months = $diff->m;
+            return $years . ' ans ' . ($months > 0 ? $months . ' mois' : '');
+        }
+        
+        return $this->getAncienneteDetailleeAttribute();
     }
 
     /**
@@ -102,5 +143,52 @@ class Militaire extends Model
             return Carbon::now()->diffInMonths($dateRetraite) <= 6;
         }
         return false;
+    }
+
+    /**
+     * Vérifie si l'ancienneté dans le grade atteint un nombre d'années spécifique
+     * (utile pour les vérifications de promotion)
+     */
+    public function aAncienneteGradeMin(int $annees): bool
+    {
+        $dateReference = self::getDateReference();
+        
+        if (!$this->date_derniere_promotion) {
+            return false;
+        }
+        
+        $datePromotion = Carbon::parse($this->date_derniere_promotion);
+        $ageEnAnnees = $datePromotion->diffInYears($dateReference);
+        
+        // Vérifier si l'anniversaire de promotion est passé dans l'année
+        $moisJourPromotion = $datePromotion->format('m-d');
+        $moisJourReference = $dateReference->format('m-d');
+        
+        // Si la date anniversaire n'est pas encore passée au 31/12, on retire 1 an
+        if ($moisJourPromotion > $moisJourReference) {
+            $ageEnAnnees--;
+        }
+        
+        return $ageEnAnnees >= $annees;
+    }
+
+    /**
+     * Vérifie si l'ancienneté totale atteint un nombre d'années spécifique
+     */
+    public function aAncienneteMin(int $annees): bool
+    {
+        $dateReference = self::getDateReference();
+        $dateEntree = Carbon::parse($this->date_entree_service);
+        $ageEnAnnees = $dateEntree->diffInYears($dateReference);
+        
+        // Vérifier si l'anniversaire d'entrée est passé dans l'année
+        $moisJourEntree = $dateEntree->format('m-d');
+        $moisJourReference = $dateReference->format('m-d');
+        
+        if ($moisJourEntree > $moisJourReference) {
+            $ageEnAnnees--;
+        }
+        
+        return $ageEnAnnees >= $annees;
     }
 }

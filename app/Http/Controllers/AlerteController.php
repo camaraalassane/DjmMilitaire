@@ -59,11 +59,19 @@ class AlerteController extends Controller
                 ] : null,
             ]);
 
-        // Statistiques
+        // Calcul des vrais totaux par type (sans les filtres de pagination)
+        $totalPromotions = Alerte::where('type_alerte', 'promotion')->count();
+        $totalFormations = Alerte::where('type_alerte', 'formation')->count();
+        $totalRetraites = Alerte::where('type_alerte', 'retraite')->count();
+
+        // Statistiques globales
         $statistiques = [
             'total' => Alerte::count(),
             'non_vues' => Alerte::where('est_vue', false)->count(),
             'vues' => Alerte::where('est_vue', true)->count(),
+            'promotions' => $totalPromotions,
+            'formations' => $totalFormations,
+            'retraites' => $totalRetraites,
         ];
 
         // Options pour les filtres
@@ -71,7 +79,6 @@ class AlerteController extends Controller
             ['label' => 'Promotion', 'value' => 'promotion'],
             ['label' => 'Formation', 'value' => 'formation'],
             ['label' => 'Retraite', 'value' => 'retraite'],
-           // ['label' => 'Certificat', 'value' => 'certificat'],
         ];
 
         return Inertia::render('alertes/index', [
@@ -83,37 +90,34 @@ class AlerteController extends Controller
     }
 
     /**
-     * Marquer une alerte comme vue.
+     * Marquer une alerte comme vue (supprimée).
      */
-/**
- * Supprimer une alerte.
- */
-public function marquerVue(Alerte $alerte)
-{
-    $alerte->delete();
-    
-    if (request()->wantsJson()) {
-        return response()->json(['success' => true]);
+    public function marquerVue(Alerte $alerte)
+    {
+        $alerte->delete();
+        
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+        
+        return redirect()->back()->with('success', 'Alerte supprimée avec succès.');
     }
-    
-    return redirect()->back()->with('success', 'Alerte supprimée avec succès.');
-}
 
-/**
- * Supprimer toutes les alertes non vues.
- */
-public function marquerToutVue()
-{
-    $alertes = Alerte::where('est_vue', false);
-    $count = $alertes->count();
-    
-    if ($count > 0) {
-        $alertes->delete();
-        $message = "{$count} alerte(s) ont été supprimées avec succès.";
-    } else {
-        $message = "Aucune alerte à supprimer.";
+    /**
+     * Supprimer toutes les alertes non vues.
+     */
+    public function marquerToutVue()
+    {
+        $alertes = Alerte::where('est_vue', false);
+        $count = $alertes->count();
+        
+        if ($count > 0) {
+            $alertes->delete();
+            $message = "{$count} alerte(s) ont été supprimées avec succès.";
+        } else {
+            $message = "Aucune alerte à supprimer.";
+        }
+        
+        return redirect()->back()->with('success', $message);
     }
-    
-    return redirect()->back()->with('success', $message);
-}
 }

@@ -1,20 +1,20 @@
 <template>
     <AuthenticatedLayout>
         
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-sky-600">
-                    Liste des certificats
-                </h2>
-                <div class="flex items-center gap-3">
-                    <Badge :value="`${certificats.total} certificats`" 
-                           style="background: #0284c7; color: white;" 
-                           size="large" />
-                    <Button label="Nouveau certificat" 
-                            icon="pi pi-plus"
-                            class="p-button-sm bg-sky-600 hover:bg-sky-700 border-sky-600 text-white"
-                            @click="createCertificat" />
-                </div>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-sky-600">
+                Liste des certificats
+            </h2>
+            <div class="flex items-center gap-3">
+                <Badge :value="`${certificats.total} certificats`" 
+                       style="background: #0284c7; color: white;" 
+                       size="large" />
+                <Button label="Nouveau certificat" 
+                        icon="pi pi-plus"
+                        class="p-button-sm bg-sky-600 hover:bg-sky-700 border-sky-600 text-white"
+                        @click="createCertificat" />
             </div>
+        </div>
         
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -35,7 +35,6 @@
                             <div class="mb-4 flex flex-col md:flex-row gap-4">
                                 <div class="flex-1">
                                     <span class="p-input-icon-left w-full">
-                                        
                                         <InputText v-model="filters.search" 
                                                   placeholder="Rechercher un certificat..." 
                                                   class="w-full"
@@ -64,9 +63,9 @@
                                        responsiveLayout="scroll"
                                        :loading="loading"
                                        paginator
+                                       lazy
                                        :rows="certificats.per_page"
                                        :totalRecords="certificats.total"
-                                       :first="(certificats.current_page - 1) * certificats.per_page"
                                        @page="onPageChange"
                                        class="p-datatable-sm">
                                 
@@ -138,24 +137,9 @@
                                 </template>
                             </DataTable>
 
-                            <!-- Informations de pagination -->
-                            <div class="flex justify-between items-center mt-4 text-sm text-gray-600">
-                                <div>
-                                    Affichage de {{ certificats.from }} à {{ certificats.to }} sur {{ certificats.total }} certificats
-                                </div>
-                                <div class="flex gap-1">
-                                    <Button icon="pi pi-chevron-left" 
-                                            class="p-button-rounded p-button-text p-button-sm text-gray-600 hover:text-sky-600"
-                                            :disabled="certificats.current_page === 1"
-                                            @click="changePage(certificats.current_page - 1)" />
-                                    <span class="px-3 py-1">
-                                        Page {{ certificats.current_page }} / {{ certificats.last_page }}
-                                    </span>
-                                    <Button icon="pi pi-chevron-right" 
-                                            class="p-button-rounded p-button-text p-button-sm text-gray-600 hover:text-sky-600"
-                                            :disabled="certificats.current_page === certificats.last_page"
-                                            @click="changePage(certificats.current_page + 1)" />
-                                </div>
+                            <!-- Simple information de pagination (sans boutons) -->
+                            <div class="text-center sm:text-left text-sm text-gray-600 mt-4">
+                                Affichage de {{ certificats.from }} à {{ certificats.to }} sur {{ certificats.total }} certificats
                             </div>
                         </template>
                     </div>
@@ -229,7 +213,7 @@ const debouncedSearch = debounce(() => {
     loadCertificats();
 }, 500);
 
-// Charger les certificats avec les filtres
+// Charger les certificats avec les filtres (par défaut page 1)
 const loadCertificats = (page = 1) => {
     loading.value = true;
     
@@ -255,16 +239,9 @@ const loadCertificats = (page = 1) => {
     });
 };
 
-// Changement de page via la pagination DataTable
+// Changement de page via la pagination DataTable (lazy)
 const onPageChange = (event) => {
     loadCertificats(event.page + 1);
-};
-
-// Changement de page manuel
-const changePage = (page) => {
-    if (page >= 1 && page <= props.certificats.last_page) {
-        loadCertificats(page);
-    }
 };
 
 // Voir les détails d'un certificat

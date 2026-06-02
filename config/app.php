@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Gestion Militaire'),
+    'name' => env('APP_NAME', 'Suivi personnel'),
 
     /*
     |--------------------------------------------------------------------------

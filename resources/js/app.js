@@ -12,7 +12,7 @@ import ToastService from 'primevue/toastservice';
 import Aura from '@primeuix/themes/aura';
 import 'primeicons/primeicons.css';
 
-const appName =  'Gestion Militaire';
+const appName =  'Suivi personnel';
 
 // Créer une directive click-outside personnalisée
 const ClickOutside = {

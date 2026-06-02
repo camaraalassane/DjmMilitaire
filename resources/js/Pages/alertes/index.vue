@@ -13,11 +13,11 @@
                             @click="markAllAsRead" />
                 </div>
             </div>
-        </div>
+        </div> 
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Cartes de navigation réduites -->
+                <!-- Cartes de navigation -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <!-- Carte Promotions -->
                     <div class="cursor-pointer transition-all hover:shadow-md rounded-lg overflow-hidden"
@@ -33,7 +33,7 @@
                                     <p class="text-xs text-white/80">Alertes de promotion</p>
                                 </div>
                             </div>
-                            <div class="text-2xl font-bold text-white">{{ promotionsCount }}</div>
+                            <div class="text-2xl font-bold text-white">{{ statistiques.promotions || 0 }}</div>
                         </div>
                     </div>
 
@@ -51,7 +51,7 @@
                                     <p class="text-xs text-white/80">Alertes de formation</p>
                                 </div>
                             </div>
-                            <div class="text-2xl font-bold text-white">{{ formationsCount }}</div>
+                            <div class="text-2xl font-bold text-white">{{ statistiques.formations || 0 }}</div>
                         </div>
                     </div>
                 </div>
@@ -112,7 +112,8 @@
                                     <i class="pi pi-search" />
                                     <InputText v-model="filters.search" 
                                               placeholder="Rechercher..."  
-                                              class="w-56 text-sm" />
+                                              class="w-56 text-sm"
+                                              @keyup.enter="applyFilters" />
                                 </span>
                                 <Button label="Rechercher" 
                                         icon="pi pi-search"
@@ -132,19 +133,18 @@
                             </h3>
                         </div>
 
-                        <DataTable :value="filteredAlertes" 
+                        <DataTable :value="alertes.data" 
                                    stripedRows 
                                    responsiveLayout="scroll"
                                    :loading="loading"
                                    paginator
+                                   lazy
                                    :rows="alertes.per_page"
-                                   :totalRecords="filteredTotal"
-                                   :first="(alertes.current_page - 1) * alertes.per_page"
+                                   :totalRecords="alertes.total"
                                    @page="onPageChange"
                                    class="p-datatable-sm"
                                    :rowClass="rowClass">
                             
-                            <!-- Militaire -->
                             <Column field="militaire.nom" header="Militaire">
                                 <template #body="slotProps">
                                     <div v-if="slotProps.data.militaire">
@@ -157,7 +157,6 @@
                                 </template>
                             </Column>
 
-                            <!-- Type -->
                             <Column field="type_alerte" header="Type">
                                 <template #body="slotProps">
                                     <Tag :value="getTypeLabel(slotProps.data.type_alerte)" 
@@ -165,14 +164,12 @@
                                 </template>
                             </Column>
 
-                            <!-- Message -->
                             <Column field="message" header="Message">
                                 <template #body="slotProps">
                                     <span class="text-sm">{{ slotProps.data.message }}</span>
                                 </template>
                             </Column>
 
-                            <!-- Échéance -->
                             <Column field="date_echeance_formatted" header="Échéance">
                                 <template #body="slotProps">
                                     <div :class="{'font-bold text-red-600 text-sm': isEcheanceProche(slotProps.data.date_echeance)}" class="text-sm">
@@ -181,14 +178,12 @@
                                 </template>
                             </Column>
 
-                            <!-- Créée le -->
                             <Column field="created_at" header="Créée le">
                                 <template #body="slotProps">
                                     <span class="text-sm">{{ slotProps.data.created_at }}</span>
                                 </template>
                             </Column>
 
-                            <!-- Statut -->
                             <Column header="Statut">
                                 <template #body="slotProps">
                                     <Tag v-if="slotProps.data.est_vue" 
@@ -200,7 +195,6 @@
                                 </template>
                             </Column>
 
-                            <!-- Action -->
                             <Column header="Action">
                                 <template #body="slotProps">
                                     <Button v-if="!slotProps.data.est_vue"
@@ -220,24 +214,8 @@
                             </template>
                         </DataTable>
 
-                        <!-- Informations de pagination -->
-                        <div class="flex justify-between items-center mt-3 text-xs text-gray-600">
-                            <div>
-                                Affichage de {{ alertes.from }} à {{ alertes.to }} sur {{ filteredTotal }} alertes
-                            </div>
-                            <div class="flex gap-1">
-                                <Button icon="pi pi-chevron-left" 
-                                        class="p-button-rounded p-button-text p-button-sm text-gray-600 hover:text-sky-600"
-                                        :disabled="alertes.current_page === 1"
-                                        @click="changePage(alertes.current_page - 1)" />
-                                <span class="px-2 py-1">
-                                    Page {{ alertes.current_page }} / {{ alertes.last_page }}
-                                </span>
-                                <Button icon="pi pi-chevron-right" 
-                                        class="p-button-rounded p-button-text p-button-sm text-gray-600 hover:text-sky-600"
-                                        :disabled="alertes.current_page === alertes.last_page"
-                                        @click="changePage(alertes.current_page + 1)" />
-                            </div>
+                        <div class="text-center sm:text-left text-sm text-gray-600 mt-4">
+                            Affichage de {{ alertes.from }} à {{ alertes.to }} sur {{ alertes.total }} alertes
                         </div>
                     </div>
                 </div>
@@ -249,13 +227,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
@@ -274,45 +251,17 @@ const props = defineProps({
     filters: {
         type: Object,
         default: () => ({})
-    },
-    typesAlertes: {
-        type: Array,
-        default: () => []
     }
 });
 
 const toast = useToast();
 const loading = ref(false);
 const loadingStates = ref({});
-const activeTab = ref('all');
-
-// Compter les alertes par type
-const promotionsCount = computed(() => {
-    if (!props.alertes.data) return 0;
-    return props.alertes.data.filter(a => a.type_alerte === 'promotion').length;
-});
-
-const formationsCount = computed(() => {
-    if (!props.alertes.data) return 0;
-    return props.alertes.data.filter(a => a.type_alerte === 'formation').length;
-});
-
-// Filtrer les alertes selon l'onglet actif
-const filteredAlertes = computed(() => {
-    if (!props.alertes.data) return [];
-    if (activeTab.value === 'all') return props.alertes.data;
-    return props.alertes.data.filter(a => a.type_alerte === activeTab.value);
-});
-
-const filteredTotal = computed(() => {
-    return filteredAlertes.value.length;
-});
+const activeTab = ref(props.filters?.type || 'all');
 
 // État des filtres
 const filters = reactive({
-    search: props.filters?.search || '',
-    type: props.filters?.type || null,
-    statut: props.filters?.statut || null
+    search: props.filters?.search || ''
 });
 
 // Obtenir le libellé du type d'alerte
@@ -341,20 +290,13 @@ const rowClass = (data) => {
     return data.est_vue ? '' : 'bg-amber-50';
 };
 
-// Changer l'onglet actif
-const setActiveTab = (tab) => {
-    activeTab.value = tab;
-    filters.type = tab === 'all' ? null : tab;
-    applyFilters();
-};
-
-// Appliquer les filtres
-const applyFilters = () => {
+// Charger les alertes
+const loadAlertes = (page = 1) => {
     loading.value = true;
     
     const params = {
-        search: filters.search,
-        statut: filters.statut
+        page,
+        search: filters.search
     };
     
     if (activeTab.value !== 'all') {
@@ -379,42 +321,21 @@ const applyFilters = () => {
     });
 };
 
-// Réinitialiser les filtres
-const resetFilters = () => {
-    filters.search = '';
-    filters.statut = null;
-    activeTab.value = 'all';
-    filters.type = null;
-    applyFilters();
+// Changer l'onglet actif
+const setActiveTab = (tab) => {
+    if (activeTab.value === tab) return;
+    activeTab.value = tab;
+    loadAlertes(1);
+};
+
+// Appliquer les filtres
+const applyFilters = () => {
+    loadAlertes(1);
 };
 
 // Changement de page
 const onPageChange = (event) => {
-    changePage(event.page + 1);
-};
-
-const changePage = (page) => {
-    if (page >= 1 && page <= props.alertes.last_page) {
-        loading.value = true;
-        
-        const params = {
-            search: filters.search,
-            statut: filters.statut,
-            page
-        };
-        
-        if (activeTab.value !== 'all') {
-            params.type = activeTab.value;
-        }
-        
-        router.get(route('alertes.index'), params, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                loading.value = false;
-            }
-        });
-    }
+    loadAlertes(event.page + 1);
 };
 
 // Marquer une alerte comme vue
@@ -431,6 +352,7 @@ const markAsRead = (alerteId) => {
                 detail: 'Alerte marquée comme vue',
                 life: 3000
             });
+            loadAlertes(props.alertes.current_page);
         },
         onError: () => {
             loadingStates.value[alerteId] = false;
@@ -455,6 +377,7 @@ const markAllAsRead = () => {
                 detail: 'Toutes les alertes ont été marquées comme vues',
                 life: 3000
             });
+            loadAlertes(props.alertes.current_page);
         },
         onError: () => {
             toast.add({
@@ -483,7 +406,6 @@ const viewMilitaire = (id) => {
     font-size: 0.85rem;
 }
 
-/* Style pour les lignes non vues - nuance orange très clair */
 :deep(.p-datatable .p-datatable-tbody > tr.bg-amber-50) {
     background-color: #fffbeb;
 }
@@ -512,7 +434,6 @@ const viewMilitaire = (id) => {
     padding: 0.3rem 0.6rem;
 }
 
-/* Style pour les boutons primaires en sky blue */
 .bg-sky-600 {
     background-color: #0284c7;
 }
@@ -521,34 +442,7 @@ const viewMilitaire = (id) => {
     background-color: #0369a1;
 }
 
-.border-sky-600 {
-    border-color: #0284c7;
-}
-
 .text-sky-600 {
     color: #0284c7;
-}
-
-.hover\:text-sky-800:hover {
-    color: #075985;
-}
-
-/* Style pour les badges personnalisés */
-:deep(.p-tag[style*="background: #0284c7"]) {
-    background: #0284c7 !important;
-    color: white !important;
-    font-weight: 500;
-}
-
-:deep(.p-tag[style*="background: #f97316"]) {
-    background: #f97316 !important;
-    color: white !important;
-    font-weight: 500;
-}
-
-:deep(.p-tag[style*="background: #10b981"]) {
-    background: #10b981 !important;
-    color: white !important;
-    font-weight: 500;
 }
 </style>

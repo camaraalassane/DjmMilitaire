@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        <meta charset="utf-8">
+       <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="google" content="notranslate">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'Suivi personnel') }}</title>
 
-        <!-- Favicon - Supprime l'icône Laravel par défaut -->
-        <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+         <!-- Favicon DTTIA -->
+        <link rel="icon" type="image/png" href="{{ asset('images/logo-dttia.png') }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo-dttia.png') }}">
         
-        <!-- Ou pour un favicon complètement vide -->
-        <!-- <link rel="icon" href="data:,"> -->
-
+        <!-- Pour les appareils Apple -->
+        <link rel="apple-touch-icon" href="{{ asset('images/logo-dttia.png') }}">
+        
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
         <!-- Scripts -->
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])

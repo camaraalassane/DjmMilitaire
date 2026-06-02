@@ -56,7 +56,6 @@
                             <!-- Recherche -->
                             <div class="field">
                                 <span class="p-input-icon-left w-full">
-                                    
                                     <InputText v-model="filters.search" 
                                               placeholder="Rechercher un grade..." 
                                               class="w-full" />
@@ -97,9 +96,9 @@
                                    responsiveLayout="scroll"
                                    :loading="loading"
                                    paginator
+                                   lazy
                                    :rows="grades.per_page"
                                    :totalRecords="grades.total"
-                                   :first="(grades.current_page - 1) * grades.per_page"
                                    @page="onPageChange"
                                    class="p-datatable-sm">
                             
@@ -162,24 +161,9 @@
                             </template>
                         </DataTable>
 
-                        <!-- Informations de pagination -->
-                        <div class="flex justify-between items-center mt-4 text-sm text-gray-600">
-                            <div>
-                                Affichage de {{ grades.from }} à {{ grades.to }} sur {{ grades.total }} grades
-                            </div>
-                            <div class="flex gap-1">
-                                <Button icon="pi pi-chevron-left" 
-                                        class="p-button-rounded p-button-text p-button-sm text-gray-600 hover:text-sky-500"
-                                        :disabled="grades.current_page === 1"
-                                        @click="changePage(grades.current_page - 1)" />
-                                <span class="px-3 py-1">
-                                    Page {{ grades.current_page }} / {{ grades.last_page }}
-                                </span>
-                                <Button icon="pi pi-chevron-right" 
-                                        class="p-button-rounded p-button-text p-button-sm text-gray-600 hover:text-sky-500"
-                                        :disabled="grades.current_page === grades.last_page"
-                                        @click="changePage(grades.current_page + 1)" />
-                            </div>
+                        <!-- Simple information de pagination (sans boutons) -->
+                        <div class="text-center sm:text-left text-sm text-gray-600 mt-4">
+                            Affichage de {{ grades.from }} à {{ grades.to }} sur {{ grades.total }} grades
                         </div>
                     </div>
                 </div>
@@ -204,7 +188,6 @@ import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
-import Tooltip from 'primevue/tooltip';
 
 const props = defineProps({
     grades: {
@@ -279,7 +262,7 @@ const resetFilters = () => {
     applyFilters();
 };
 
-// Changement de page
+// Changement de page (événement PrimeVue)
 const onPageChange = (event) => {
     changePage(event.page + 1);
 };

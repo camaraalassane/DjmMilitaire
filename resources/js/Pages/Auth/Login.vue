@@ -12,8 +12,8 @@
                 <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg mb-2 transition-all duration-300 hover:scale-105">
                     <i class="pi pi-shield text-2xl text-white"></i>
                 </div>
-                <h1 class="text-white text-xl font-bold tracking-tight">Gestion Militaire</h1>
-                <p class="text-white/70 text-[11px] mt-0.5">DTTIA</p>
+                <h1 class="text-white text-xl font-bold tracking-tight">Suivi personnel</h1>
+                <p class="text-white/70 text-[11px] mt-0.5">Application de gestion</p>
             </div>
             
             <!-- Carte de connexion - ultra compacte -->
@@ -52,7 +52,6 @@
                                     :class="{ 'p-invalid': form.errors.email }"
                                     placeholder="exemple@domaine.com"
                                     autofocus />
-                                <i class="pi pi-envelope absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs group-focus-within:text-sky-500"></i>
                             </div>
                             <small v-if="form.errors.email" class="text-red-500 text-[11px] mt-1 flex items-center gap-1">
                                 <i class="pi pi-exclamation-circle text-[10px]"></i>
@@ -73,7 +72,6 @@
                                     class="w-full pl-8 pr-8 py-2 text-sm border-gray-200 focus:border-sky-400 focus:ring-sky-400"
                                     :class="{ 'p-invalid': form.errors.password }"
                                     placeholder="••••••••" />
-                                <i class="pi pi-lock absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs group-focus-within:text-sky-500"></i>
                                 <button type="button" @click="showPassword = !showPassword" class="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-sky-500">
                                     <i :class="showPassword ? 'pi pi-eye-slash text-xs' : 'pi pi-eye text-xs'"></i>
                                 </button>
@@ -109,9 +107,9 @@
                         <!-- Footer compact -->
                         <div class="text-center pt-2 border-t border-gray-100">
                             <div class="flex justify-center gap-2 text-[10px] text-gray-400">
-                                <span>DTTIA</span>
+                                <span>Suivi personnel</span>
                                 <span>•</span>
-                                <span>Gestion Militaire</span>
+                                <span>Gestion militaire</span>
                                 <span>•</span>
                                 <span>v1.0</span>
                             </div>
@@ -122,7 +120,7 @@
             
             <!-- Footer ultra compact -->
             <div class="text-center mt-3 animate-fade-in-up">
-                <p class="text-white/40 text-[10px]">© {{ new Date().getFullYear() }} - Direction des Transmissions, des Telecommunications et de l'Informatique</p>
+                <p class="text-white/40 text-[10px]">© {{ new Date().getFullYear() }} - Suivi personnel - Application de gestion</p>
             </div>
         </div>
     </div>
@@ -248,7 +246,6 @@ const submit = () => {
     padding: 0.375rem 0.625rem;
 }
 
-/* Ajustements pour les écrans de hauteur limitée */
 @media (max-height: 680px) {
     :deep(.p-card .p-card-content) {
         padding: 0.75rem 1rem;

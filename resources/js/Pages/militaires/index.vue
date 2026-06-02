@@ -49,7 +49,6 @@
                         <form @submit.prevent="applyFilters" class="flex flex-col md:flex-row gap-4">
                             <div class="flex-1">
                                 <span class="p-input-icon-left w-full">
-                                    
                                     <InputText v-model="filters.search" 
                                               placeholder="Rechercher par nom, prénom ou matricule..." 
                                               class="w-full" />
@@ -95,9 +94,9 @@
                                    responsiveLayout="scroll"
                                    :loading="loading"
                                    paginator
+                                   lazy
                                    :rows="militaires.per_page"
                                    :totalRecords="militaires.total"
-                                   :first="(militaires.current_page - 1) * militaires.per_page"
                                    @page="onPageChange"
                                    class="p-datatable-sm">
                             
@@ -190,26 +189,6 @@
                                 </div>
                             </template>
                         </DataTable>
-
-                        <!-- Informations de pagination -->
-                        <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4 text-sm text-gray-600">
-                            <div class="text-center sm:text-left">
-                                Affichage de {{ militaires.from }} à {{ militaires.to }} sur {{ militaires.total }} militaires
-                            </div>
-                            <div class="flex gap-1">
-                                <Button icon="pi pi-chevron-left" 
-                                        class="p-button-rounded p-button-text p-button-sm text-gray-600 hover:text-sky-500"
-                                        :disabled="militaires.current_page === 1"
-                                        @click="changePage(militaires.current_page - 1)" />
-                                <span class="px-3 py-1">
-                                    Page {{ militaires.current_page }} / {{ militaires.last_page }}
-                                </span>
-                                <Button icon="pi pi-chevron-right" 
-                                        class="p-button-rounded p-button-text p-button-sm text-gray-600 hover:text-sky-500"
-                                        :disabled="militaires.current_page === militaires.last_page"
-                                        @click="changePage(militaires.current_page + 1)" />
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -362,7 +341,7 @@ const resetFilters = () => {
     applyFilters();
 };
 
-// Changement de page
+// Changement de page (événement PrimeVue)
 const onPageChange = (event) => {
     changePage(event.page + 1);
 };
