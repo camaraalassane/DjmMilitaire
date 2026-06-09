@@ -220,8 +220,7 @@ class EligibiliteController extends Controller
         $dateProposition = $this->getDateProposition();
 
         // CAT1
-        if ($grade == 'Soldat 1' && !in_array('CAT1', $certificatsObtenus) && $ancienneteGrade >= 5 && $conditionsBase) {
-            if (empty($formationFiltre) || $formationFiltre === 'CAT1') {
+if (in_array($grade, ['Soldat 2', 'Soldat 1']) && !in_array('CAT1', $certificatsObtenus) && $ancienneteGrade >= 5 && $conditionsBase) {            if (empty($formationFiltre) || $formationFiltre === 'CAT1') {
                 $dateConditions = Carbon::parse($militaire->date_entree_service)->addYears(5);
                 $eligibilites['formations'][] = $this->formatFormation($militaire, 'CAT1', 'Certificat d\'Aptitude Technique Niveau 1', $dateProposition, $dateConditions);
             }

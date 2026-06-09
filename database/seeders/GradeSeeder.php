@@ -13,6 +13,8 @@ class GradeSeeder extends Seeder
      */
     public function run(): void
     {
+        $dateDefault = Carbon::parse('2026-03-07 02:41:20');
+
         $grades = [
             [
                 'id' => 1,
@@ -20,9 +22,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'Sdt2',
                 'type_grade' => 'militaire du rang',
                 'ordre' => 1,
-                'age_retraite' => 50,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 50,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 2,
@@ -30,9 +32,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'Sdt1',
                 'type_grade' => 'militaire du rang',
                 'ordre' => 2,
-                'age_retraite' => 50,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 50,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 3,
@@ -40,9 +42,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'Cpl',
                 'type_grade' => 'militaire du rang',
                 'ordre' => 3,
-                'age_retraite' => 50,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 50,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 4,
@@ -50,9 +52,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'Cpl-Chef',
                 'type_grade' => 'militaire du rang',
                 'ordre' => 4,
-                'age_retraite' => 50,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 50,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 5,
@@ -60,9 +62,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'Sgt',
                 'type_grade' => 'sous-officier',
                 'ordre' => 5,
-                'age_retraite' => 53,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 53,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 6,
@@ -70,9 +72,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'Sch',
                 'type_grade' => 'sous-officier',
                 'ordre' => 6,
-                'age_retraite' => 53,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 53,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 7,
@@ -80,9 +82,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'Adj',
                 'type_grade' => 'sous-officier',
                 'ordre' => 7,
-                'age_retraite' => 56,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 56,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 8,
@@ -90,9 +92,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'AdC',
                 'type_grade' => 'sous-officier',
                 'ordre' => 8,
-                'age_retraite' => 56,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 56,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 9,
@@ -100,9 +102,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'ACM',
                 'type_grade' => 'sous-officier',
                 'ordre' => 9,
-                'age_retraite' => 58,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 58,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 10,
@@ -110,9 +112,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'SLt',
                 'type_grade' => 'officier subalterne',
                 'ordre' => 10,
-                'age_retraite' => 60,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 60,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 11,
@@ -120,9 +122,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'LTN',
                 'type_grade' => 'officier subalterne',
                 'ordre' => 11,
-                'age_retraite' => 60,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 60,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 12,
@@ -130,9 +132,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'CNE',
                 'type_grade' => 'officier subalterne',
                 'ordre' => 12,
-                'age_retraite' => 60,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 60,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 13,
@@ -140,9 +142,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'CDT',
                 'type_grade' => 'officier supérieur',
                 'ordre' => 13,
-                'age_retraite' => 62,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 62,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 14,
@@ -150,9 +152,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'LCL',
                 'type_grade' => 'officier supérieur',
                 'ordre' => 14,
-                'age_retraite' => 62,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 62,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 15,
@@ -160,9 +162,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'COL',
                 'type_grade' => 'officier supérieur',
                 'ordre' => 15,
-                'age_retraite' => 62,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 62,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 16,
@@ -170,9 +172,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'CLM',
                 'type_grade' => 'officier supérieur',
                 'ordre' => 16,
-                'age_retraite' => 62,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 62,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 17,
@@ -180,9 +182,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'GBR',
                 'type_grade' => 'officier général',
                 'ordre' => 17,
-                'age_retraite' => 65,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 65,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 18,
@@ -190,9 +192,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'GDV',
                 'type_grade' => 'officier général',
                 'ordre' => 18,
-                'age_retraite' => 65,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 65,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 19,
@@ -200,9 +202,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'GCA',
                 'type_grade' => 'officier général',
                 'ordre' => 19,
-                'age_retraite' => 65,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 65,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
             [
                 'id' => 20,
@@ -210,9 +212,9 @@ class GradeSeeder extends Seeder
                 'code_grade' => 'GAR',
                 'type_grade' => 'officier général',
                 'ordre' => 20,
-                'age_retraite' => 65,
-                'created_at' => Carbon::parse('2026-03-07 02:41:20'),
-                'updated_at' => Carbon::parse('2026-03-07 02:41:20')
+                'retraite_obligatoire' => 65,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
             ],
         ];
 

@@ -8,8 +8,8 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <!-- Cartes statistiques -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
                             <div class="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-xl shadow-md p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i class="pi pi-users text-xl"></i>
@@ -17,6 +17,7 @@
                                 </div>
                                 <div class="text-3xl font-bold">{{ statistiques.total_militaires }}</div>
                             </div>
+                            
                             <div class="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-xl shadow-md p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i class="pi pi-check-circle text-xl"></i>
@@ -24,6 +25,7 @@
                                 </div>
                                 <div class="text-3xl font-bold">{{ statistiques.militaires_actifs }}</div>
                             </div>
+                            
                             <div class="bg-gradient-to-r from-yellow-500 to-yellow-700 text-white rounded-xl shadow-md p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i class="pi pi-bell text-xl"></i>
@@ -31,6 +33,7 @@
                                 </div>
                                 <div class="text-3xl font-bold">{{ statistiques.alertes_non_vues }}</div>
                             </div>
+                            
                             <div class="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-xl shadow-md p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i class="pi pi-calendar text-xl"></i>
@@ -38,6 +41,7 @@
                                 </div>
                                 <div class="text-3xl font-bold">{{ retraitesNTotal }}</div>
                             </div>
+                            
                             <div class="bg-gradient-to-r from-orange-500 to-orange-700 text-white rounded-xl shadow-md p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i class="pi pi-calendar text-xl"></i>
@@ -45,6 +49,7 @@
                                 </div>
                                 <div class="text-3xl font-bold">{{ retraitesN1Total }}</div>
                             </div>
+                            
                             <div class="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-xl shadow-md p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i class="pi pi-star text-xl"></i>
@@ -52,6 +57,7 @@
                                 </div>
                                 <div class="text-3xl font-bold">{{ proposablesNTotal }}</div>
                             </div>
+                            
                             <div class="bg-gradient-to-r from-indigo-500 to-indigo-700 text-white rounded-xl shadow-md p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i class="pi pi-star text-xl"></i>
@@ -61,23 +67,21 @@
                             </div>
                         </div>
 
-                        <!-- Boutons de sélection -->
                         <div class="flex flex-wrap gap-3 mb-6 border-b pb-4">
                             <Button label="Retraites N" 
-                                    :class="activeSection === 'retraitesN' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                    :class="activeSection === 'retraitesN' ? 'bg-red-600 text-white border-red-600' : 'p-button-secondary p-button-outlined'"
                                     @click="loadSection('retraitesN')" />
                             <Button label="Retraites N+1" 
-                                    :class="activeSection === 'retraitesN1' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                    :class="activeSection === 'retraitesN1' ? 'bg-orange-600 text-white border-orange-600' : 'p-button-secondary p-button-outlined'"
                                     @click="loadSection('retraitesN1')" />
                             <Button label="Proposables N" 
-                                    :class="activeSection === 'proposablesN' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                    :class="activeSection === 'proposablesN' ? 'bg-purple-600 text-white border-purple-600' : 'p-button-secondary p-button-outlined'"
                                     @click="loadSection('proposablesN')" />
                             <Button label="Proposables N+1" 
-                                    :class="activeSection === 'proposablesN1' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                    :class="activeSection === 'proposablesN1' ? 'bg-indigo-600 text-white border-indigo-600' : 'p-button-secondary p-button-outlined'"
                                     @click="loadSection('proposablesN1')" />
                         </div>
 
-                        <!-- Section chargée dynamiquement -->
                         <div v-if="loading" class="text-center py-12">
                             <i class="pi pi-spin pi-spinner text-3xl text-sky-600"></i>
                             <p class="mt-2 text-gray-500">Chargement...</p>
@@ -149,7 +153,6 @@
                             <p>Sélectionnez une section ci-dessus</p>
                         </div>
 
-                        <!-- Alertes récentes -->
                         <div class="mt-8">
                             <Card>
                                 <template #title>
@@ -193,7 +196,6 @@
                             </Card>
                         </div>
 
-                        <!-- Répartition par grade -->
                         <Card class="mt-8">
                             <template #title>
                                 <div class="flex items-center gap-2">
@@ -235,7 +237,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -271,6 +273,15 @@ const proposablesNTotal = ref(0);
 const proposablesN1Total = ref(0);
 
 const gradesFiltres = computed(() => props.grades.filter(g => g.militaires_count > 0));
+
+// CORRECTION 2 : Fonction interne pour charger silencieusement les compteurs des badges au démarrage
+const fetchSectionTotalSilently = (section, refTarget) => {
+    axios.get(route('dashboard.section'), { params: { section } })
+        .then(response => {
+            refTarget.value = response.data.total;
+        })
+        .catch(error => console.error(`Erreur chargement total ${section}:`, error));
+};
 
 const loadSection = (section) => {
     if (activeSection.value === section && sectionData.value) return;
@@ -310,6 +321,17 @@ const loadSection = (section) => {
         });
 };
 
+// CORRECTION 3 : Lancer les requêtes automatiques au montage du composant
+onMounted(() => {
+    // Charge par défaut la première section (Retraites N) pour que l'écran ne soit pas vide
+    loadSection('retraitesN');
+    
+    // Récupère les totaux des autres sections pour les afficher directement sur les cartes
+    fetchSectionTotalSilently('retraitesN1', retraitesN1Total);
+    fetchSectionTotalSilently('proposablesN', proposablesNTotal);
+    fetchSectionTotalSilently('proposablesN1', proposablesN1Total);
+});
+
 const exportCurrentSection = () => {
     let routeName = '';
     if (activeSection.value === 'retraitesN') routeName = 'dashboard.export-retraites-annee-n';
@@ -346,7 +368,7 @@ const getAlerteClass = (type) => {
 };
 
 const calculerPourcentage = (count) => {
-    if (props.statistiques.militaires_actifs === 0) return 0;
+    if (!props.statistiques || props.statistiques.militaires_actifs === 0) return 0;
     return (count / props.statistiques.militaires_actifs) * 100;
 };
 

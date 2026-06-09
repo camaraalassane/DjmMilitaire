@@ -49,42 +49,39 @@
                     </Card>
                 </div>
 
-                <!-- Filtres -->
+                <!-- Filtres avec recherche automatique -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-6">
                     <div class="p-4">
-                        <form @submit.prevent="applyFilters" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- Recherche -->
-                            <div class="field">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
                                 <span class="p-input-icon-left w-full">
+                                    <i class="pi pi-search" />
                                     <InputText v-model="filters.search" 
                                               placeholder="Rechercher un grade..." 
-                                              class="w-full" />
+                                              class="w-full"
+                                              @input="onSearchInput" />
                                 </span>
                             </div>
-
-                            <!-- Filtre par type -->
-                            <div class="field">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Type de grade</label>
                                 <Select v-model="filters.type" 
                                         :options="typesGrades" 
                                         optionLabel="label" 
                                         optionValue="value"
                                         placeholder="Tous les types"
                                         class="w-full"
-                                        showClear />
+                                        showClear
+                                        @change="onFilterChange" />
                             </div>
-
-                            <!-- Boutons -->
-                            <div class="flex gap-2">
-                                <Button type="submit" 
-                                        label="Filtrer" 
-                                        icon="pi pi-filter"
-                                        class="p-button-sm bg-sky-400 hover:bg-sky-500 border-sky-400 text-white" />
+                            <div>
+                                <div class="h-7 mb-1"></div>
                                 <Button label="Réinitialiser" 
                                         icon="pi pi-times"
-                                        class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white"
+                                        class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white w-full"
                                         @click="resetFilters" />
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
 
@@ -161,7 +158,7 @@
                             </template>
                         </DataTable>
 
-                        <!-- Simple information de pagination (sans boutons) -->
+                        <!-- Simple information de pagination -->
                         <div class="text-center sm:text-left text-sm text-gray-600 mt-4">
                             Affichage de {{ grades.from }} à {{ grades.to }} sur {{ grades.total }} grades
                         </div>
@@ -175,7 +172,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Card from 'primevue/card';
@@ -188,6 +185,7 @@ import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import debounce from 'lodash/debounce';
 
 const props = defineProps({
     grades: {
@@ -217,6 +215,28 @@ const filters = reactive({
     type: props.filters?.type || null
 });
 
+// Recherche automatique avec debounce
+const debouncedSearch = debounce(() => {
+    loadGrades(1);
+}, 500);
+
+const onSearchInput = () => {
+    debouncedSearch();
+};
+
+const onFilterChange = () => {
+    loadGrades(1);
+};
+
+// Watcher pour surveiller les changements de recherche
+watch(() => filters.search, () => {
+    debouncedSearch();
+});
+
+watch(() => filters.type, () => {
+    loadGrades(1);
+});
+
 // Style pour les badges selon le type de grade
 const getTypeStyle = (type) => {
     const styles = {
@@ -230,11 +250,12 @@ const getTypeStyle = (type) => {
     return styles[type] || { background: '#bae6fd', color: '#0369a1' };
 };
 
-// Appliquer les filtres
-const applyFilters = () => {
+// Charger les grades
+const loadGrades = (page = 1) => {
     loading.value = true;
     
     router.get(route('grades.index'), {
+        page,
         search: filters.search,
         type: filters.type
     }, {
@@ -259,28 +280,16 @@ const applyFilters = () => {
 const resetFilters = () => {
     filters.search = '';
     filters.type = null;
-    applyFilters();
 };
 
-// Changement de page (événement PrimeVue)
+// Changement de page
 const onPageChange = (event) => {
     changePage(event.page + 1);
 };
 
 const changePage = (page) => {
     if (page >= 1 && page <= props.grades.last_page) {
-        loading.value = true;
-        
-        router.get(route('grades.index'), {
-            ...filters,
-            page
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                loading.value = false;
-            }
-        });
+        loadGrades(page);
     }
 };
 

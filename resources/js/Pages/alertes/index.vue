@@ -89,7 +89,7 @@
                     </Card>
                 </div>
 
-                <!-- Filtres -->
+                <!-- Filtres avec recherche automatique -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-6">
                     <div class="p-3">
                         <div class="flex flex-wrap gap-3 justify-between items-center">
@@ -107,18 +107,17 @@
                                         class="p-button-sm text-sm"
                                         @click="setActiveTab('formation')" />
                             </div>
-                            <div class="flex gap-2">
-                                <span class="p-input-icon-left">
-                                    <i class="pi pi-search" />
-                                    <InputText v-model="filters.search" 
-                                              placeholder="Rechercher..."  
-                                              class="w-56 text-sm"
-                                              @keyup.enter="applyFilters" />
-                                </span>
-                                <Button label="Rechercher" 
-                                        icon="pi pi-search"
-                                        class="p-button-sm bg-sky-600 hover:bg-sky-700 text-white text-sm"
-                                        @click="applyFilters" />
+                            <div class="flex gap-2 items-end">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+                                    <span class="p-input-icon-left">
+                                        <i class="pi pi-search" />
+                                        <InputText v-model="filters.search" 
+                                                  placeholder="Rechercher..."  
+                                                  class="w-56 text-sm"
+                                                  @input="onSearchInput" />
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -227,7 +226,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Card from 'primevue/card';
@@ -238,6 +237,7 @@ import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import debounce from 'lodash/debounce';
 
 const props = defineProps({
     alertes: {
@@ -262,6 +262,20 @@ const activeTab = ref(props.filters?.type || 'all');
 // État des filtres
 const filters = reactive({
     search: props.filters?.search || ''
+});
+
+// Recherche automatique avec debounce
+const debouncedSearch = debounce(() => {
+    loadAlertes(1);
+}, 500);
+
+const onSearchInput = () => {
+    debouncedSearch();
+};
+
+// Watcher pour surveiller les changements de recherche
+watch(() => filters.search, () => {
+    debouncedSearch();
 });
 
 // Obtenir le libellé du type d'alerte
@@ -325,11 +339,6 @@ const loadAlertes = (page = 1) => {
 const setActiveTab = (tab) => {
     if (activeTab.value === tab) return;
     activeTab.value = tab;
-    loadAlertes(1);
-};
-
-// Appliquer les filtres
-const applyFilters = () => {
     loadAlertes(1);
 };
 

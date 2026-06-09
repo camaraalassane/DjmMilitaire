@@ -43,46 +43,50 @@
                     </div>
                 </div>
 
-                <!-- Filtres - Responsive -->
+                <!-- Filtres avec recherche automatique - ALIGNEMENT CORRIGÉ -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-6">
                     <div class="p-4">
-                        <form @submit.prevent="applyFilters" class="flex flex-col md:flex-row gap-4">
-                            <div class="flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
                                 <span class="p-input-icon-left w-full">
+                                    <i class="pi pi-search" />
                                     <InputText v-model="filters.search" 
                                               placeholder="Rechercher par nom, prénom ou matricule..." 
-                                              class="w-full" />
+                                              class="w-full"
+                                              @input="onSearchInput" />
                                 </span>
                             </div>
-                            <div class="w-full md:w-48">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Grade</label>
                                 <Select v-model="filters.grade" 
                                         :options="gradeOptions" 
                                         optionLabel="label" 
                                         optionValue="value"
                                         placeholder="Tous les grades"
                                         class="w-full"
-                                        showClear />
+                                        showClear
+                                        @change="onFilterChange" />
                             </div>
-                            <div class="w-full md:w-48">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                                 <Select v-model="filters.statut" 
                                         :options="statutOptions" 
                                         optionLabel="label" 
                                         optionValue="value"
                                         placeholder="Tous les statuts"
                                         class="w-full"
-                                        showClear />
+                                        showClear
+                                        @change="onFilterChange" />
                             </div>
-                            <div class="flex flex-wrap gap-2">
-                                <Button type="submit" 
-                                        label="Filtrer" 
-                                        icon="pi pi-filter"
-                                        class="p-button-sm bg-sky-500 hover:bg-sky-600 border-sky-500 text-white flex-1 md:flex-none" />
+                            <div>
+                                <div class="h-7 mb-1"></div>
                                 <Button label="Réinitialiser" 
                                         icon="pi pi-times"
-                                        class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white flex-1 md:flex-none"
+                                        class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white w-full md:w-auto"
                                         @click="resetFilters" />
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
 
@@ -146,7 +150,7 @@
                                 </template>
                             </Column>
 
-                            <!-- Ancienneté service - CORRIGÉ -->
+                            <!-- Ancienneté service -->
                             <Column header="Ancienneté">
                                 <template #body="slotProps">
                                     <span class="text-sm">{{ formatAnciennete(slotProps.data.anciennete) }}</span>
@@ -223,7 +227,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Button from 'primevue/button';
@@ -236,6 +240,7 @@ import Badge from 'primevue/badge';
 import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import debounce from 'lodash/debounce';
 
 const toast = useToast();
 const loading = ref(false);
@@ -273,7 +278,7 @@ const props = defineProps({
     }
 });
 
-// Formater l'ancienneté (arrondir à l'entier)
+// Formater l'ancienneté
 const formatAnciennete = (annees) => {
     if (!annees && annees !== 0) return '0 ans';
     return `${Math.floor(annees)} ans`;
@@ -294,6 +299,28 @@ const filters = reactive({
     statut: props.filters?.statut || null
 });
 
+// Recherche automatique avec debounce
+const debouncedSearch = debounce(() => {
+    loadMilitaires(1);
+}, 500);
+
+const onSearchInput = () => {
+    debouncedSearch();
+};
+
+const onFilterChange = () => {
+    loadMilitaires(1);
+};
+
+// Watcher pour surveiller les changements de recherche
+watch(() => filters.search, () => {
+    debouncedSearch();
+});
+
+watch([() => filters.grade, () => filters.statut], () => {
+    loadMilitaires(1);
+});
+
 // Style pour les badges selon le statut
 const getStatutStyle = (statut) => {
     const styles = {
@@ -307,11 +334,12 @@ const getStatutStyle = (statut) => {
     return styles[statut] || { background: '#e5e7eb', color: '#374151' };
 };
 
-// Appliquer les filtres
-const applyFilters = () => {
+// Charger les militaires
+const loadMilitaires = (page = 1) => {
     loading.value = true;
     
     router.get(route('militaires.index'), {
+        page,
         search: filters.search,
         grade: filters.grade,
         statut: filters.statut
@@ -338,28 +366,16 @@ const resetFilters = () => {
     filters.search = '';
     filters.grade = null;
     filters.statut = null;
-    applyFilters();
 };
 
-// Changement de page (événement PrimeVue)
+// Changement de page
 const onPageChange = (event) => {
     changePage(event.page + 1);
 };
 
 const changePage = (page) => {
     if (page >= 1 && page <= props.militaires.last_page) {
-        loading.value = true;
-        
-        router.get(route('militaires.index'), {
-            ...filters,
-            page
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                loading.value = false;
-            }
-        });
+        loadMilitaires(page);
     }
 };
 
@@ -400,6 +416,7 @@ const deleteMilitaire = () => {
                 detail: 'Militaire supprimé avec succès',
                 life: 3000
             });
+            loadMilitaires(1);
         },
         onError: () => {
             toast.add({

@@ -15,13 +15,22 @@ class GradeController extends Controller
     {
         $query = Grade::query();
 
-        // Filtre par recherche
+        // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('nom_grade', 'like', "%{$search}%")
-                  ->orWhere('code_grade', 'like', "%{$search}%")
-                  ->orWhere('type_grade', 'like', "%{$search}%");
+            // Découper la recherche en mots individuels
+            $searchTerms = explode(' ', $search);
+            
+            $query->where(function($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    if (!empty($term)) {
+                        $q->where(function($subQ) use ($term) {
+                            $subQ->where('nom_grade', 'like', "%{$term}%")
+                                 ->orWhere('code_grade', 'like', "%{$term}%")
+                                 ->orWhere('type_grade', 'like', "%{$term}%");
+                        });
+                    }
+                }
             });
         }
 
@@ -69,9 +78,28 @@ class GradeController extends Controller
      */
     public function show(Request $request, Grade $grade)
     {
-        // Récupérer les militaires ayant ce grade
-        $militaires = $grade->militaires()
-            ->where('statut', 'actif')
+        // Récupérer les militaires ayant ce grade avec recherche améliorée
+        $militairesQuery = $grade->militaires()->where('statut', 'actif');
+        
+        // RECHERCHE AMÉLIORÉE POUR LES MILITAIRES DANS LE GRADE
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $searchTerms = explode(' ', $search);
+            
+            $militairesQuery->where(function($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    if (!empty($term)) {
+                        $q->where(function($subQ) use ($term) {
+                            $subQ->where('nom', 'like', "%{$term}%")
+                                 ->orWhere('prenom', 'like', "%{$term}%")
+                                 ->orWhere('matricule', 'like', "%{$term}%");
+                        });
+                    }
+                }
+            });
+        }
+        
+        $militaires = $militairesQuery
             ->orderBy('nom')
             ->orderBy('prenom')
             ->paginate(10)

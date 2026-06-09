@@ -11,10 +11,37 @@ class CertificatController extends Controller
     /**
      * Afficher la liste des certificats.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $certificats = Certificat::orderBy('niveau_certificat')
+        $query = Certificat::query();
+
+        // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES
+        if ($request->filled('search')) {
+            $search = $request->search;
+            // Découper la recherche en mots individuels
+            $searchTerms = explode(' ', $search);
+            
+            $query->where(function($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    if (!empty($term)) {
+                        $q->where(function($subQ) use ($term) {
+                            $subQ->where('nom_certificat', 'like', "%{$term}%")
+                                 ->orWhere('niveau_certificat', 'like', "%{$term}%")
+                                 ->orWhere('grade_associe', 'like', "%{$term}%");
+                        });
+                    }
+                }
+            });
+        }
+
+        // FILTRE PAR NIVEAU
+        if ($request->filled('niveau')) {
+            $query->where('niveau_certificat', $request->niveau);
+        }
+
+        $certificats = $query->orderBy('niveau_certificat')
             ->paginate(20)
+            ->withQueryString()
             ->through(fn ($certificat) => [
                 'id' => $certificat->id,
                 'nom_certificat' => $certificat->nom_certificat,
@@ -26,8 +53,9 @@ class CertificatController extends Controller
                 'conditions_count' => $this->countConditions($certificat->conditions),
             ]);
 
-        return Inertia::render('certificats/index', [ // Notez le "I" majuscule
-            'certificats' => $certificats
+        return Inertia::render('certificats/index', [
+            'certificats' => $certificats,
+            'filters' => $request->only(['search', 'niveau']), // Passage des filtres à la vue
         ]);
     }
 
@@ -36,7 +64,7 @@ class CertificatController extends Controller
      */
     public function show(Certificat $certificat)
     {
-        return Inertia::render('certificats/show', [ // Notez le "S" majuscule
+        return Inertia::render('certificats/show', [
             'certificat' => [
                 'id' => $certificat->id,
                 'nom_certificat' => $certificat->nom_certificat,

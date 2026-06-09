@@ -29,13 +29,22 @@ class AlerteController extends Controller
             }
         }
 
-        // Filtre par recherche (sur le nom du militaire)
+        // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES (sur le nom du militaire)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('militaire', function($q) use ($search) {
-                $q->where('nom', 'like', "%{$search}%")
-                  ->orWhere('prenom', 'like', "%{$search}%")
-                  ->orWhere('matricule', 'like', "%{$search}%");
+            // Découper la recherche en mots individuels
+            $searchTerms = explode(' ', $search);
+            
+            $query->whereHas('militaire', function($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    if (!empty($term)) {
+                        $q->where(function($subQ) use ($term) {
+                            $subQ->where('nom', 'like', "%{$term}%")
+                                 ->orWhere('prenom', 'like', "%{$term}%")
+                                 ->orWhere('matricule', 'like', "%{$term}%");
+                        });
+                    }
+                }
             });
         }
 

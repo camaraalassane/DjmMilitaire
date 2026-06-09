@@ -1,35 +1,28 @@
 <template>
     <div class="min-h-screen bg-gray-100">
-        <!-- Sidebar -->
         <Sidebar 
             v-model:is-open="sidebarOpen" 
             :is-mobile="isMobile"
             @close-mobile="closeMobileMenu"
         />
 
-        <!-- Main content -->
         <div :class="['transition-all duration-300', !isMobile && sidebarOpen ? 'lg:ml-64' : (!isMobile ? 'lg:ml-20' : '')]">
-            <!-- Header -->
-            <header class="bg-gradient-to-r from-sky-500 to-sky-700 shadow-sm sticky top-0 z-10">
+            
+            <header class="bg-gradient-to-r from-sky-500 to-sky-700 shadow-sm z-10">
                 <div class="flex justify-between items-center px-4 py-3">
-                    <!-- Bouton menu mobile (visible uniquement sur mobile) -->
                     <button @click="toggleSidebarMobile" class="lg:hidden text-white">
                         <i class="pi pi-bars text-xl"></i>
                     </button>
                     
-                    <!-- Logo/Branding sur mobile -->
                     <div class="lg:hidden flex-1 text-center">
                         <h1 class="text-lg font-semibold text-white">{{ title }}</h1>
                     </div>
                     
-                    <!-- Titre sur desktop -->
                     <h1 class="text-xl font-semibold text-white hidden lg:block">{{ title }}</h1>
                     
-                    <!-- Espaceur pour centrer sur mobile -->
                     <div class="lg:hidden w-8"></div>
 
                     <div class="flex items-center gap-4">
-                        <!-- Notifications -->
                         <button @click="showNotifications" class="relative text-white hover:text-sky-100">
                             <i class="pi pi-bell text-xl"></i>
                             <span v-if="alertesCount > 0" 
@@ -38,7 +31,6 @@
                             </span>
                         </button>
                         
-                        <!-- User menu -->
                         <div class="relative" ref="userMenuRef">
                             <button @click="toggleUserMenu" class="flex items-center gap-2 text-white hover:text-sky-100">
                                 <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
@@ -63,7 +55,6 @@
                 </div>
             </header>
 
-            <!-- Page Content -->
             <main class="p-4">
                 <slot />
             </main>
@@ -77,16 +68,18 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import Sidebar from '@/Components/Sidebar.vue';
 
 const page = usePage();
-const sidebarOpen = ref(false);
+
+// Détection immédiate de l'environnement et de la taille de l'écran pour éviter le saut d'affichage
+const isServer = typeof window === 'undefined';
+const isMobile = ref(isServer ? false : window.innerWidth < 1024);
+const sidebarOpen = ref(isServer ? false : window.innerWidth >= 1024);
+
 const userMenuOpen = ref(false);
 const userMenuRef = ref(null);
-const isMobile = ref(false);
 
 const user = computed(() => page.props.auth.user);
 const userName = computed(() => user.value?.name || 'Utilisateur');
 const alertesCount = computed(() => page.props.alertesCount || 0);
-
-// MODIFICATION ICI : Changer "Gestion Militaire" en "Suivi personnel"
 const title = computed(() => page.props.title || 'Suivi personnel');
 
 const checkScreenSize = () => {

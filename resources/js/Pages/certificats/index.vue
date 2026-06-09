@@ -32,29 +32,37 @@
 
                         <!-- Tableau des certificats -->
                         <template v-else>
-                            <div class="mb-4 flex flex-col md:flex-row gap-4">
-                                <div class="flex-1">
-                                    <span class="p-input-icon-left w-full">
-                                        <InputText v-model="filters.search" 
-                                                  placeholder="Rechercher un certificat..." 
-                                                  class="w-full"
-                                                  @input="debouncedSearch" />
-                                    </span>
-                                </div>
-                                <div class="md:w-48">
-                                    <Select v-model="filters.niveau" 
-                                            :options="niveauxOptions" 
-                                            optionLabel="label" 
-                                            optionValue="value"
-                                            placeholder="Filtrer par niveau"
-                                            class="w-full"
-                                            @change="loadCertificats" />
-                                </div>
-                                <div>
-                                    <Button label="Filtrer" 
-                                            icon="pi pi-filter"
-                                            class="p-button-sm bg-sky-600 hover:bg-sky-700 border-sky-600 text-white"
-                                            @click="loadCertificats" />
+                            <!-- Filtres avec recherche automatique -->
+                            <div class="mb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+                                        <span class="p-input-icon-left w-full">
+                                            <i class="pi pi-search" />
+                                            <InputText v-model="filters.search" 
+                                                      placeholder="Rechercher un certificat..." 
+                                                      class="w-full"
+                                                      @input="onSearchInput" />
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Niveau</label>
+                                        <Select v-model="filters.niveau" 
+                                                :options="niveauxOptions" 
+                                                optionLabel="label" 
+                                                optionValue="value"
+                                                placeholder="Filtrer par niveau"
+                                                class="w-full"
+                                                showClear
+                                                @change="onFilterChange" />
+                                    </div>
+                                    <div>
+                                        <div class="h-7 mb-1"></div>
+                                        <Button label="Réinitialiser" 
+                                                icon="pi pi-times"
+                                                class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white w-full"
+                                                @click="resetFilters" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -137,7 +145,7 @@
                                 </template>
                             </DataTable>
 
-                            <!-- Simple information de pagination (sans boutons) -->
+                            <!-- Simple information de pagination -->
                             <div class="text-center sm:text-left text-sm text-gray-600 mt-4">
                                 Affichage de {{ certificats.from }} à {{ certificats.to }} sur {{ certificats.total }} certificats
                             </div>
@@ -152,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Button from 'primevue/button';
@@ -208,12 +216,29 @@ const getNiveauColor = (niveau) => {
     return colors[niveau] || '#0284c7';
 };
 
-// Recherche avec debounce
+// Recherche automatique avec debounce
 const debouncedSearch = debounce(() => {
-    loadCertificats();
+    loadCertificats(1);
 }, 500);
 
-// Charger les certificats avec les filtres (par défaut page 1)
+const onSearchInput = () => {
+    debouncedSearch();
+};
+
+const onFilterChange = () => {
+    loadCertificats(1);
+};
+
+// Watcher pour surveiller les changements de recherche
+watch(() => filters.search, () => {
+    debouncedSearch();
+});
+
+watch(() => filters.niveau, () => {
+    loadCertificats(1);
+});
+
+// Charger les certificats avec les filtres
 const loadCertificats = (page = 1) => {
     loading.value = true;
     
@@ -239,7 +264,13 @@ const loadCertificats = (page = 1) => {
     });
 };
 
-// Changement de page via la pagination DataTable (lazy)
+// Réinitialiser les filtres
+const resetFilters = () => {
+    filters.search = '';
+    filters.niveau = null;
+};
+
+// Changement de page via la pagination DataTable
 const onPageChange = (event) => {
     loadCertificats(event.page + 1);
 };
@@ -323,6 +354,18 @@ const createCertificat = () => {
 
 .hover\:bg-sky-50:hover {
     background-color: #f0f9ff;
+}
+
+.bg-gray-500 {
+    background-color: #6b7280;
+}
+
+.hover\:bg-gray-600:hover {
+    background-color: #4b5563;
+}
+
+.border-gray-500 {
+    border-color: #6b7280;
 }
 
 /* Style pour les liens */
