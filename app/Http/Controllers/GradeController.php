@@ -15,15 +15,16 @@ class GradeController extends Controller
     {
         $query = Grade::query();
 
-        // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES
+        // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES (CORRECTION SERVEUR)
         if ($request->filled('search')) {
-            $search = $request->search;
-            // Découper la recherche en mots individuels
-            $searchTerms = explode(' ', $search);
+            // Supprime les espaces multiples et nettoie les bords
+            $search = preg_replace('/\s+/', ' ', $request->search);
+            $searchTerms = explode(' ', trim($search));
             
             $query->where(function($q) use ($searchTerms) {
                 foreach ($searchTerms as $term) {
                     if (!empty($term)) {
+                        // Force l'application du AND entre chaque mot, mais OR entre les colonnes
                         $q->where(function($subQ) use ($term) {
                             $subQ->where('nom_grade', 'like', "%{$term}%")
                                  ->orWhere('code_grade', 'like', "%{$term}%")
@@ -81,14 +82,16 @@ class GradeController extends Controller
         // Récupérer les militaires ayant ce grade avec recherche améliorée
         $militairesQuery = $grade->militaires()->where('statut', 'actif');
         
-        // RECHERCHE AMÉLIORÉE POUR LES MILITAIRES DANS LE GRADE
+        // RECHERCHE AMÉLIORÉE POUR LES MILITAIRES DANS LE GRADE (CORRECTION SERVEUR)
         if ($request->filled('search')) {
-            $search = $request->search;
-            $searchTerms = explode(' ', $search);
+            // Supprime les espaces multiples et nettoie les bords
+            $search = preg_replace('/\s+/', ' ', $request->search);
+            $searchTerms = explode(' ', trim($search));
             
             $militairesQuery->where(function($q) use ($searchTerms) {
                 foreach ($searchTerms as $term) {
                     if (!empty($term)) {
+                        // Force l'application du AND entre chaque mot, mais OR entre les colonnes
                         $q->where(function($subQ) use ($term) {
                             $subQ->where('nom', 'like', "%{$term}%")
                                  ->orWhere('prenom', 'like', "%{$term}%")

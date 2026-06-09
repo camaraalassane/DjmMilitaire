@@ -17,24 +17,23 @@ use Illuminate\Support\Facades\Artisan;
 
 class MilitaireController extends Controller
 {
-    /**
-    /**
+ /**
  * Affiche la liste des militaires actifs.
  */
 public function index(Request $request)
 {
     $query = Militaire::query();
 
-    // RECHERCHE AMÉLIORÉE POUR GÉRER LES ESPACES
+    // RECHERCHE AMÉLIORÉE POUR GÉRER LES ESPACES (CORRECTION LOCAL & SERVEUR)
     if ($request->filled('search')) {
-        $search = $request->search;
-        
-        // Découper la recherche en mots individuels
-        $searchTerms = explode(' ', $search);
+        // Supprime les espaces en double ou en trop au début/fin
+        $search = preg_replace('/\s+/', ' ', $request->search);
+        $searchTerms = explode(' ', trim($search));
         
         $query->where(function($q) use ($searchTerms) {
             foreach ($searchTerms as $term) {
                 if (!empty($term)) {
+                    // Force l'application du AND entre chaque mot, mais OR entre les colonnes
                     $q->where(function($subQ) use ($term) {
                         $subQ->where('nom', 'LIKE', "%{$term}%")
                              ->orWhere('prenom', 'LIKE', "%{$term}%")
