@@ -15,15 +15,16 @@ class CertificatController extends Controller
     {
         $query = Certificat::query();
 
-        // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES
+        // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES (CORRECTION SERVEUR)
         if ($request->filled('search')) {
-            $search = $request->search;
-            // Découper la recherche en mots individuels
-            $searchTerms = explode(' ', $search);
+            // Supprime les espaces multiples et nettoie les bords
+            $search = preg_replace('/\s+/', ' ', $request->search);
+            $searchTerms = explode(' ', trim($search));
             
             $query->where(function($q) use ($searchTerms) {
                 foreach ($searchTerms as $term) {
                     if (!empty($term)) {
+                        // Force l'application du AND entre chaque mot, mais OR entre les colonnes
                         $q->where(function($subQ) use ($term) {
                             $subQ->where('nom_certificat', 'like', "%{$term}%")
                                  ->orWhere('niveau_certificat', 'like', "%{$term}%")
@@ -75,7 +76,7 @@ class CertificatController extends Controller
                 'duree_certificat_precedent' => $certificat->duree_certificat_precedent,
                 'conditions' => $this->formatConditions($certificat->conditions),
                 'created_at' => $certificat->created_at?->format('d/m/Y'),
-                'updated_at' => $certificat->updated_at?->format('d/m/Y'),
+                'updated_at' => $commissions_count = $certificat->updated_at?->format('d/m/Y'),
             ]
         ]);
     }

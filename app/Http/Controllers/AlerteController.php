@@ -9,94 +9,95 @@ use Inertia\Inertia;
 class AlerteController extends Controller
 {
     /**
-     * Afficher la liste des alertes.
-     */
-    public function index(Request $request)
-    {
-        $query = Alerte::with('militaire');
+ * Afficher la liste des alertes.
+ */
+public function index(Request $request)
+{
+    $query = Alerte::with('militaire');
 
-        // Filtre par type
-        if ($request->filled('type')) { 
-            $query->where('type_alerte', $request->type);
-        }
-
-        // Filtre par statut (vue/non vue)
-        if ($request->filled('statut')) {
-            if ($request->statut === 'vue') {
-                $query->where('est_vue', true);
-            } elseif ($request->statut === 'non_vue') {
-                $query->where('est_vue', false);
-            }
-        }
-
-        // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES (sur le nom du militaire)
-        if ($request->filled('search')) {
-            $search = $request->search;
-            // Découper la recherche en mots individuels
-            $searchTerms = explode(' ', $search);
-            
-            $query->whereHas('militaire', function($q) use ($searchTerms) {
-                foreach ($searchTerms as $term) {
-                    if (!empty($term)) {
-                        $q->where(function($subQ) use ($term) {
-                            $subQ->where('nom', 'like', "%{$term}%")
-                                 ->orWhere('prenom', 'like', "%{$term}%")
-                                 ->orWhere('matricule', 'like', "%{$term}%");
-                        });
-                    }
-                }
-            });
-        }
-
-        $alertes = $query->orderBy('created_at', 'desc')
-            ->paginate(20)
-            ->withQueryString()
-            ->through(fn ($alerte) => [
-                'id' => $alerte->id,
-                'type_alerte' => $alerte->type_alerte,
-                'message' => $alerte->message,
-                'date_echeance' => $alerte->date_echeance?->format('Y-m-d'),
-                'date_echeance_formatted' => $alerte->date_echeance?->format('d/m/Y'),
-                'est_vue' => $alerte->est_vue,
-                'created_at' => $alerte->created_at?->format('d/m/Y H:i'),
-                'militaire' => $alerte->militaire ? [
-                    'id' => $alerte->militaire->id,
-                    'nom' => $alerte->militaire->nom,
-                    'prenom' => $alerte->militaire->prenom,
-                    'matricule' => $alerte->militaire->matricule,
-                    'grade_actuel' => $alerte->militaire->grade_actuel,
-                ] : null,
-            ]);
-
-        // Calcul des vrais totaux par type (sans les filtres de pagination)
-        $totalPromotions = Alerte::where('type_alerte', 'promotion')->count();
-        $totalFormations = Alerte::where('type_alerte', 'formation')->count();
-        $totalRetraites = Alerte::where('type_alerte', 'retraite')->count();
-
-        // Statistiques globales
-        $statistiques = [
-            'total' => Alerte::count(),
-            'non_vues' => Alerte::where('est_vue', false)->count(),
-            'vues' => Alerte::where('est_vue', true)->count(),
-            'promotions' => $totalPromotions,
-            'formations' => $totalFormations,
-            'retraites' => $totalRetraites,
-        ];
-
-        // Options pour les filtres
-        $typesAlertes = [
-            ['label' => 'Promotion', 'value' => 'promotion'],
-            ['label' => 'Formation', 'value' => 'formation'],
-            ['label' => 'Retraite', 'value' => 'retraite'],
-        ];
-
-        return Inertia::render('alertes/index', [
-            'alertes' => $alertes,
-            'statistiques' => $statistiques,
-            'filters' => $request->only(['search', 'type', 'statut']),
-            'typesAlertes' => $typesAlertes,
-        ]);
+    // Filtre par type
+    if ($request->filled('type')) { 
+        $query->where('type_alerte', $request->type);
     }
+
+    // Filtre par statut (vue/non vue)
+    if ($request->filled('statut')) {
+        if ($request->statut === 'vue') {
+            $query->where('est_vue', true);
+        } elseif ($request->statut === 'non_vue') {
+            $query->where('est_vue', false);
+        }
+    }
+
+    // RECHERCHE AMÉLIORÉE AVEC GESTION DES ESPACES (SUR LE MILITAIRE - CORRECTION SERVEUR)
+    if ($request->filled('search')) {
+        // Supprime les espaces multiples et nettoie les bords
+        $search = preg_replace('/\s+/', ' ', $request->search);
+        $searchTerms = explode(' ', trim($search));
+        
+        $query->whereHas('militaire', function($q) use ($searchTerms) {
+            foreach ($searchTerms as $term) {
+                if (!empty($term)) {
+                    // Force l'application du AND entre chaque mot, mais OR entre les colonnes du militaire
+                    $q->where(function($subQ) use ($term) {
+                        $subQ->where('nom', 'like', "%{$term}%")
+                             ->orWhere('prenom', 'like', "%{$term}%")
+                             ->orWhere('matricule', 'like', "%{$term}%");
+                    });
+                }
+            }
+        });
+    }
+
+    $alertes = $query->orderBy('created_at', 'desc')
+        ->paginate(20)
+        ->withQueryString()
+        ->through(fn ($alerte) => [
+            'id' => $alerte->id,
+            'type_alerte' => $alerte->type_alerte,
+            'message' => $alerte->message,
+            'date_echeance' => $alerte->date_echeance?->format('Y-m-d'),
+            'date_echeance_formatted' => $alerte->date_echeance?->format('d/m/Y'),
+            'est_vue' => $alerte->est_vue,
+            'created_at' => $alerte->created_at?->format('d/m/Y H:i'),
+            'militaire' => $alerte->militaire ? [
+                'id' => $alerte->militaire->id,
+                'nom' => $alerte->militaire->nom,
+                'prenom' => $alerte->militaire->prenom,
+                'matricule' => $alerte->militaire->matricule,
+                'grade_actuel' => $alerte->militaire->grade_actuel,
+            ] : null,
+        ]);
+
+    // Calcul des vrais totaux par type (sans les filtres de pagination)
+    $totalPromotions = Alerte::where('type_alerte', 'promotion')->count();
+    $totalFormations = Alerte::where('type_alerte', 'formation')->count();
+    $totalRetraites = Alerte::where('type_alerte', 'retraite')->count();
+
+    // Statistiques globales
+    $statistiques = [
+        'total' => Alerte::count(),
+        'non_vues' => Alerte::where('est_vue', false)->count(),
+        'vues' => Alerte::where('est_vue', true)->count(),
+        'promotions' => $totalPromotions,
+        'formations' => $totalFormations,
+        'retraites' => $totalRetraites,
+    ];
+
+    // Options pour les filtres
+    $typesAlertes = [
+        ['label' => 'Promotion', 'value' => 'promotion'],
+        ['label' => 'Formation', 'value' => 'formation'],
+        ['label' => 'Retraite', 'value' => 'retraite'],
+    ];
+
+    return Inertia::render('alertes/index', [
+        'alertes' => $alertes,
+        'statistiques' => $statistiques,
+        'filters' => $request->only(['search', 'type', 'statut']),
+        'typesAlertes' => $typesAlertes,
+    ]);
+}
 
     /**
      * Marquer une alerte comme vue (supprimée).
