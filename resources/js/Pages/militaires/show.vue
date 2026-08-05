@@ -38,105 +38,133 @@
                             </template>
                             
                             <template #content>
-                                <!-- Informations principales -->
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <!-- Colonne gauche -->
-                                    <div class="space-y-4">
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-id-card text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Matricule</span>
-                                            </div>
-                                            <Tag :value="militaire.matricule" 
-                                                 style="background: #bae6fd; color: #0369a1;" 
-                                                 class="text-base" />
+                                <!-- Informations principales en grille 2 colonnes -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    
+                                    <!-- LIGNE 1 : Matricule & Date de naissance -->
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-id-card text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Matricule</span>
                                         </div>
+                                        <Tag :value="militaire.matricule" 
+                                             style="background: #bae6fd; color: #0369a1;" 
+                                             class="text-base" />
+                                    </div>
 
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-calendar text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Date de naissance</span>
-                                            </div>
-                                            <div class="text-gray-800">{{ formatDate(militaire.date_naissance) }}</div>
-                                            <small class="text-gray-500">{{ militaire.age }} ans</small>
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-calendar text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Date de naissance</span>
                                         </div>
+                                        <div class="text-gray-800">{{ militaire.date_naissance ?? '-' }}</div>
+                                        <small class="text-gray-500">{{ militaire.age }} ans</small>
+                                    </div>
 
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-briefcase text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Grade actuel</span>
-                                            </div>
-                                            <Tag :value="militaire.grade_actuel" 
-                                                 style="background: #7dd3fc; color: #0369a1;" />
-                                            <div v-if="militaire.date_derniere_promotion" class="mt-2 text-sm">
-                                                <span class="text-gray-600">Dernière promotion :</span>
-                                                {{ formatDate(militaire.date_derniere_promotion) }}
-                                            </div>
+                                    <!-- LIGNE 2 : Grade actuel & Statut -->
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-briefcase text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Grade actuel</span>
                                         </div>
-
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-tag text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Statut</span>
-                                            </div>
-                                            <Tag :value="militaire.statut" 
-                                                 :style="getStatutStyle(militaire.statut)" />
-                                        </div>
-
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-car text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Permis de conduire</span>
-                                            </div>
-                                            <Tag :value="militaire.a_permis_conduire ? 'Oui' : 'Non'" 
-                                                 :style="militaire.a_permis_conduire ? { background: '#7dd3fc', color: '#0369a1' } : { background: '#e5e7eb', color: '#6b7280' }" />
+                                        <Tag :value="militaire.grade_actuel" 
+                                             style="background: #7dd3fc; color: #0369a1;" />
+                                        <div v-if="militaire.date_derniere_promotion" class="mt-2 text-sm">
+                                            <span class="text-gray-600">Dernière promotion :</span>
+                                            {{ militaire.date_derniere_promotion }}
                                         </div>
                                     </div>
 
-                                    <!-- Colonne droite -->
-                                    <div class="space-y-4">
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-calendar-plus text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Date d'entrée en service</span>
-                                            </div>
-                                            <div class="text-gray-800">{{ formatDate(militaire.date_entree_service) }}</div>
-                                            <small class="text-gray-500">{{ formatAnciennete(militaire.anciennete) }} de service</small>
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-tag text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Statut</span>
                                         </div>
+                                        <Tag :value="militaire.statut" 
+                                             :style="getStatutStyle(militaire.statut)" />
+                                    </div>
 
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-chart-line text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Ancienneté dans le grade</span>
-                                            </div>
-                                            <Tag :value="formatAnciennete(militaire.anciennete_grade)" 
-                                                 style="background: #bae6fd; color: #0369a1;" />
+                                    <!-- LIGNE 3 : Permis de conduire & Date d'entrée en service -->
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-car text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Permis de conduire</span>
                                         </div>
+                                        <Tag :value="militaire.a_permis_conduire ? 'Oui' : 'Non'" 
+                                             :style="militaire.a_permis_conduire ? { background: '#7dd3fc', color: '#0369a1' } : { background: '#e5e7eb', color: '#6b7280' }" />
+                                    </div>
 
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-calendar-minus text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Date de retraite</span>
-                                            </div>
-                                            <div v-if="militaire.date_retraite">
-                                                <span class="text-gray-800">{{ formatDate(militaire.date_retraite) }}</span>
-                                                <Tag v-if="militaire.est_eligible_retraite" 
-                                                     value="Bientôt" 
-                                                     style="background: #f97316; color: white;"
-                                                     class="ml-2" />
-                                            </div>
-                                            <span v-else class="text-gray-400">Non calculée</span>
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-calendar-plus text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Date d'entrée en service</span>
                                         </div>
+                                        <div class="text-gray-800">{{ militaire.date_entree_service ?? '-' }}</div>
+                                        <small class="text-gray-500">{{ formatAnciennete(militaire.anciennete) }} de service</small>
+                                    </div>
 
-                                        <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i class="pi pi-book text-sky-500"></i>
-                                                <span class="font-medium text-gray-700">Spécialité</span>
-                                            </div>
-                                            <div class="text-gray-800">{{ militaire.specialite || '-' }}</div>
+                                    <!-- LIGNE 4 : Ancienneté dans le grade & Date de retraite -->
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-chart-line text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Ancienneté dans le grade</span>
                                         </div>
+                                        <Tag :value="formatAnciennete(militaire.anciennete_grade)" 
+                                             style="background: #bae6fd; color: #0369a1;" />
+                                    </div>
 
-                                        <div class="grid grid-cols-2 gap-3">
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-calendar-minus text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Date de retraite</span>
+                                        </div>
+                                        <div v-if="militaire.date_retraite">
+                                            <span class="text-gray-800">{{ militaire.date_retraite }}</span>
+                                            <Tag v-if="militaire.est_eligible_retraite" 
+                                                 value="Bientôt" 
+                                                 style="background: #f97316; color: white;"
+                                                 class="ml-2" />
+                                        </div>
+                                        <span v-else class="text-gray-400">Non calculée</span>
+                                    </div>
+
+                                    <!-- LIGNE 5 : Spécialité & Position actuelle -->
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-book text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Spécialité</span>
+                                        </div>
+                                        <div class="text-gray-800">{{ militaire.specialite || '-' }}</div>
+                                    </div>
+
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-map-marker text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Position actuelle</span>
+                                        </div>
+                                        <div class="text-gray-800">{{ militaire.position_actuelle || '-' }}</div>
+                                    </div>
+
+                                    <!-- LIGNE 6 : Fonction passée & Fonction actuelle -->
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-history text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Fonction passée</span>
+                                        </div>
+                                        <div class="text-gray-800">{{ militaire.fonction_passee || '-' }}</div>
+                                    </div>
+
+                                    <div class="border rounded-lg p-4 hover:border-sky-300 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="pi pi-briefcase text-sky-500"></i>
+                                            <span class="font-medium text-gray-700">Fonction actuelle</span>
+                                        </div>
+                                        <div class="text-gray-800">{{ militaire.fonction_actuelle || '-' }}</div>
+                                    </div>
+
+                                    <!-- LIGNE 7 : Problème judiciaire & Problème disciplinaire (sur une ligne) -->
+                                    <div class="md:col-span-2">
+                                        <div class="grid grid-cols-2 gap-4">
                                             <div class="border rounded-lg p-3 hover:border-sky-300 transition-all">
                                                 <div class="flex items-center gap-2 mb-1">
                                                     <i class="pi pi-gavel text-amber-500"></i>
@@ -165,20 +193,25 @@
                                     </div>
                                 </Divider>
 
-                                <DataTable :value="certificatsData" 
+                                <div v-if="certificats.length === 0" class="text-center py-4 text-gray-500">
+                                    <i class="pi pi-info-circle text-2xl mb-2"></i>
+                                    <p>Aucun certificat obtenu</p>
+                                </div>
+
+                                <DataTable v-else :value="certificats" 
                                            stripedRows 
                                            responsiveLayout="scroll"
                                            class="p-datatable-sm mb-6">
-                                    <Column field="nom" header="Certificat"></Column>
-                                    <Column field="obtenu" header="Obtenu">
+                                    <Column field="nom_certificat" header="Certificat"></Column>
+                                    <Column field="niveau_certificat" header="Niveau">
                                         <template #body="slotProps">
-                                            <Tag :value="slotProps.data.obtenu ? 'Oui' : 'Non'" 
-                                                 :style="slotProps.data.obtenu ? { background: '#7dd3fc', color: '#0369a1' } : { background: '#e5e7eb', color: '#6b7280' }" />
+                                            <Tag :value="slotProps.data.niveau_certificat || '-'" 
+                                                 style="background: #bae6fd; color: #0369a1;" />
                                         </template>
                                     </Column>
-                                    <Column field="date" header="Date d'obtention">
+                                    <Column field="date_obtention" header="Date d'obtention">
                                         <template #body="slotProps">
-                                            {{ slotProps.data.date || '-' }}
+                                            {{ slotProps.data.date_obtention ?? '-' }}
                                         </template>
                                     </Column>
                                 </DataTable>
@@ -209,7 +242,7 @@
                                     <Column field="message" header="Message"></Column>
                                     <Column field="date_echeance" header="Échéance">
                                         <template #body="slotProps">
-                                            {{ slotProps.data.date_echeance }}
+                                            {{ slotProps.data.date_echeance ?? '-' }}
                                         </template>
                                     </Column>
                                     <Column field="est_vue" header="Statut">
@@ -255,7 +288,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Card from 'primevue/card';
@@ -285,34 +318,6 @@ const props = defineProps({
 
 const toast = useToast();
 const deleteDialogVisible = ref(false);
-
-// Formater les données des certificats pour le tableau
-const certificatsData = computed(() => {
-    const certs = [
-        { key: 'cat1', nom: 'CAT1' },
-        { key: 'cat2', nom: 'CAT2' },
-        { key: 'cia', nom: 'CIA' },
-        { key: 'ba1', nom: 'BA1' },
-        { key: 'ba2', nom: 'BA2' },
-        { key: 'bmp1', nom: 'BMP1' },
-        { key: 'bmp2', nom: 'BMP2' },
-        { key: 'bs', nom: 'BS' },
-        { key: 'ct2', nom: 'CT2' },
-        { key: 'apli', nom: 'APLI' },
-        { key: 'cfcu', nom: 'CFCU' },
-        { key: 'cem', nom: 'CEM' },
-        { key: 'certificat_etat_major', nom: 'Certificat État-Major' },
-        { key: 'ecole_guerre', nom: 'École de Guerre' }
-    ];
-
-    return certs.map(cert => ({
-        nom: cert.nom,
-        obtenu: props.militaire[`a_fait_${cert.key}`] || false,
-        date: props.militaire[`date_obtention_${cert.key}`] 
-            ? formatDate(props.militaire[`date_obtention_${cert.key}`])
-            : '-'
-    })).filter(cert => cert.obtenu);
-});
 
 // Style pour les badges selon le statut
 const getStatutStyle = (statut) => {
@@ -345,32 +350,6 @@ const getTypeLabel = (type) => {
         'retraite': 'Retraite'
     };
     return labels[type] || type;
-};
-
-// Formater une date - Version corrigée
-const formatDate = (date) => {
-    if (!date) return '-';
-    
-    // Si c'est déjà une chaîne au format YYYY-MM-DD
-    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [year, month, day] = date.split('-');
-        return `${day}/${month}/${year}`;
-    }
-    
-    // Si c'est un objet Date ou une autre chaîne
-    try {
-        const d = new Date(date);
-        if (isNaN(d.getTime())) {
-            return '-';
-        }
-        return d.toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    } catch (e) {
-        return '-';
-    }
 };
 
 // Formater l'ancienneté (arrondir à l'entier)
@@ -456,7 +435,6 @@ const deleteMilitaire = () => {
     background-color: #f0f9ff;
 }
 
-/* Style pour les informations en cartes */
 .border {
     transition: all 0.2s ease;
     border-color: #e5e7eb;

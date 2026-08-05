@@ -57,11 +57,21 @@ class GradeSeeder extends Seeder
                 'updated_at' => $dateDefault
             ],
             [
+                'id' => 23,  // ESOA
+                'nom_grade' => 'Eleve Sous Officier d\'Active',
+                'code_grade' => 'ESOA',
+                'type_grade' => 'sous-officier',
+                'ordre' => 5,
+                'retraite_obligatoire' => 53,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
+            ],
+            [
                 'id' => 5,
                 'nom_grade' => 'Sergent',
                 'code_grade' => 'Sgt',
                 'type_grade' => 'sous-officier',
-                'ordre' => 5,
+                'ordre' => 6,
                 'retraite_obligatoire' => 53,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -71,7 +81,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Sergent-Chef',
                 'code_grade' => 'Sch',
                 'type_grade' => 'sous-officier',
-                'ordre' => 6,
+                'ordre' => 7,
                 'retraite_obligatoire' => 53,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -81,7 +91,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Adjudant',
                 'code_grade' => 'Adj',
                 'type_grade' => 'sous-officier',
-                'ordre' => 7,
+                'ordre' => 8,
                 'retraite_obligatoire' => 56,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -91,7 +101,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Adjudant-Chef',
                 'code_grade' => 'AdC',
                 'type_grade' => 'sous-officier',
-                'ordre' => 8,
+                'ordre' => 9,
                 'retraite_obligatoire' => 56,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -101,8 +111,18 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Adjudant-Chef major',
                 'code_grade' => 'ACM',
                 'type_grade' => 'sous-officier',
-                'ordre' => 9,
+                'ordre' => 10,
                 'retraite_obligatoire' => 58,
+                'created_at' => $dateDefault,
+                'updated_at' => $dateDefault
+            ],
+            [
+                'id' => 22,  // EOA
+                'nom_grade' => 'Eleve Officier d\'Active',
+                'code_grade' => 'EOA',
+                'type_grade' => 'officier subalterne',
+                'ordre' => 11,
+                'retraite_obligatoire' => 60,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
             ],
@@ -111,7 +131,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Sous-lieutenant',
                 'code_grade' => 'SLt',
                 'type_grade' => 'officier subalterne',
-                'ordre' => 10,
+                'ordre' => 12,
                 'retraite_obligatoire' => 60,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -121,7 +141,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Lieutenant',
                 'code_grade' => 'LTN',
                 'type_grade' => 'officier subalterne',
-                'ordre' => 11,
+                'ordre' => 13,
                 'retraite_obligatoire' => 60,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -131,7 +151,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Capitaine',
                 'code_grade' => 'CNE',
                 'type_grade' => 'officier subalterne',
-                'ordre' => 12,
+                'ordre' => 14,
                 'retraite_obligatoire' => 60,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -141,7 +161,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Commandant',
                 'code_grade' => 'CDT',
                 'type_grade' => 'officier supérieur',
-                'ordre' => 13,
+                'ordre' => 15,
                 'retraite_obligatoire' => 62,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -151,7 +171,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Lieutenant-colonel',
                 'code_grade' => 'LCL',
                 'type_grade' => 'officier supérieur',
-                'ordre' => 14,
+                'ordre' => 16,
                 'retraite_obligatoire' => 62,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -161,7 +181,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Colonel',
                 'code_grade' => 'COL',
                 'type_grade' => 'officier supérieur',
-                'ordre' => 15,
+                'ordre' => 17,
                 'retraite_obligatoire' => 62,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -171,7 +191,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Colonel-Major',
                 'code_grade' => 'CLM',
                 'type_grade' => 'officier supérieur',
-                'ordre' => 16,
+                'ordre' => 18,
                 'retraite_obligatoire' => 62,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -181,7 +201,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Général de brigade',
                 'code_grade' => 'GBR',
                 'type_grade' => 'officier général',
-                'ordre' => 17,
+                'ordre' => 19,
                 'retraite_obligatoire' => 65,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -191,7 +211,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Général de division',
                 'code_grade' => 'GDV',
                 'type_grade' => 'officier général',
-                'ordre' => 18,
+                'ordre' => 20,
                 'retraite_obligatoire' => 65,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -201,7 +221,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Général de corps d\'armée',
                 'code_grade' => 'GCA',
                 'type_grade' => 'officier général',
-                'ordre' => 19,
+                'ordre' => 21,
                 'retraite_obligatoire' => 65,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault
@@ -211,7 +231,7 @@ class GradeSeeder extends Seeder
                 'nom_grade' => 'Général d\'armée',
                 'code_grade' => 'GAR',
                 'type_grade' => 'officier général',
-                'ordre' => 20,
+                'ordre' => 22,
                 'retraite_obligatoire' => 65,
                 'created_at' => $dateDefault,
                 'updated_at' => $dateDefault

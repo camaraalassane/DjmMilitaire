@@ -1,29 +1,24 @@
 <template>
     <AuthenticatedLayout>
         <div class="py-12">
-            <!-- Header avec titre et boutons -->
+            <!-- Header -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 px-4 md:px-0">
-                <h2 class="font-semibold text-xl text-sky-600">
-                    Gestion des Militaires
-                </h2>
+                <h2 class="font-semibold text-xl text-sky-600">Gestion des Militaires</h2>
                 <div class="flex flex-wrap gap-3">
-                    <button 
-                        @click="createMilitaire"
-                        class="px-4 py-2 bg-white text-sky-600 rounded-lg font-medium hover:bg-sky-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
-                        <i class="pi pi-plus text-sm md:text-base"></i>
-                        Nouveau militaire
+                    <button @click="createMilitaire" class="px-4 py-2 bg-white text-sky-600 rounded-lg font-medium hover:bg-sky-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
+                        <i class="pi pi-plus text-sm md:text-base"></i> Nouveau militaire
                     </button>
-                    <button 
-                        @click="importExcel"
-                        class="px-4 py-2 bg-white text-emerald-600 rounded-lg font-medium hover:bg-emerald-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
-                        <i class="pi pi-upload text-sm md:text-base"></i>
-                        Importer Excel
+                    <button @click="importExcel" class="px-4 py-2 bg-white text-emerald-600 rounded-lg font-medium hover:bg-emerald-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
+                        <i class="pi pi-upload text-sm md:text-base"></i> Importer Excel
+                    </button>
+                    <button @click="openExportModal" class="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
+                        <i class="pi pi-file-excel text-sm md:text-base"></i> Exporter
                     </button>
                 </div>
             </div>
        
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Statistiques - Responsive grid -->
+                <!-- Statistiques -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-sky-500">
                         <div class="text-sm text-gray-500">Total militaires</div>
@@ -43,7 +38,7 @@
                     </div>
                 </div>
 
-                <!-- Filtres avec recherche automatique - ALIGNEMENT CORRIGÉ -->
+                <!-- Filtres -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-6">
                     <div class="p-4">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -90,7 +85,7 @@
                     </div>
                 </div>
 
-                <!-- Tableau des militaires -->
+                <!-- DataTable -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-4 md:p-6">
                         <DataTable :value="militaires.data" 
@@ -104,69 +99,71 @@
                                    @page="onPageChange"
                                    class="p-datatable-sm">
                             
-                            <!-- Matricule -->
                             <Column field="matricule" header="Matricule">
                                 <template #body="slotProps">
-                                    <Tag :value="slotProps.data.matricule" 
-                                         style="background: #bae6fd; color: #0369a1;" />
+                                    <Tag :value="slotProps.data.matricule" style="background: #bae6fd; color: #0369a1;" />
                                 </template>
                             </Column>
 
-                            <!-- Nom & Prénom -->
                             <Column field="nom" header="Nom & Prénom">
                                 <template #body="slotProps">
                                     <div class="flex items-center gap-2">
                                         <Button :label="slotProps.data.nom + ' ' + slotProps.data.prenom"
                                                 class="p-button-link p-0 text-sky-600 hover:text-sky-700 font-medium text-left"
                                                 @click="viewMilitaire(slotProps.data.id)" />
-                                        <Badge v-if="slotProps.data.alertes_count > 0" 
-                                               value="!" 
-                                               style="background: #f97316; color: white;" 
-                                               class="ml-2" />
+                                        <Badge v-if="slotProps.data.alertes_count > 0" value="!" style="background: #f97316; color: white;" class="ml-2" />
                                     </div>
                                 </template>
                             </Column>
 
-                            <!-- Grade -->
                             <Column field="grade_actuel" header="Grade">
                                 <template #body="slotProps">
-                                    <Tag :value="slotProps.data.grade_actuel" 
-                                         style="background: #7dd3fc; color: #0369a1;" />
+                                    <Tag :value="slotProps.data.grade_actuel" style="background: #7dd3fc; color: #0369a1;" />
                                 </template>
                             </Column>
 
-                            <!-- Date entrée service -->
                             <Column field="date_entree_service" header="Entrée service">
                                 <template #body="slotProps">
                                     <span class="text-sm">{{ slotProps.data.date_entree_service || '-' }}</span>
                                 </template>
                             </Column>
 
-                            <!-- Âge -->
                             <Column header="Âge">
                                 <template #body="slotProps">
-                                    <Tag :value="slotProps.data.age + ' ans'" 
-                                         style="background: #7dd3fc; color: #0369a1;" />
+                                    <Tag :value="slotProps.data.age + ' ans'" style="background: #7dd3fc; color: #0369a1;" />
                                 </template>
                             </Column>
 
-                            <!-- Ancienneté service -->
                             <Column header="Ancienneté">
                                 <template #body="slotProps">
                                     <span class="text-sm">{{ formatAnciennete(slotProps.data.anciennete) }}</span>
                                 </template>
                             </Column>
 
-                            <!-- Statut -->
                             <Column header="Statut">
                                 <template #body="slotProps">
-                                    <Tag :value="slotProps.data.statut" 
-                                         :style="getStatutStyle(slotProps.data.statut)" 
-                                         class="text-xs" />
+                                    <Tag :value="slotProps.data.statut" :style="getStatutStyle(slotProps.data.statut)" class="text-xs" />
                                 </template>
                             </Column>
 
-                            <!-- Actions -->
+                            <Column field="position_actuelle" header="Position">
+                                <template #body="slotProps">
+                                    <span class="text-sm">{{ slotProps.data.position_actuelle || '-' }}</span>
+                                </template>
+                            </Column>
+
+                            <Column field="fonction_passee" header="Fonction passée">
+                                <template #body="slotProps">
+                                    <span class="text-sm">{{ slotProps.data.fonction_passee || '-' }}</span>
+                                </template>
+                            </Column>
+
+                            <Column field="fonction_actuelle" header="Fonction actuelle">
+                                <template #body="slotProps">
+                                    <span class="text-sm">{{ slotProps.data.fonction_actuelle || '-' }}</span>
+                                </template>
+                            </Column>
+
                             <Column header="Actions">
                                 <template #body="slotProps">
                                     <div class="flex gap-1">
@@ -198,26 +195,57 @@
             </div>
         </div>
 
-        <!-- Dialog de confirmation de suppression -->
-        <Dialog v-model:visible="deleteDialogVisible" 
-                header="Confirmation" 
-                :modal="true"
-                :style="{ width: '90%', maxWidth: '400px' }"
-                class="p-fluid">
+        <!-- Dialog suppression -->
+        <Dialog v-model:visible="deleteDialogVisible" header="Confirmation" :modal="true" :style="{ width: '90%', maxWidth: '400px' }" class="p-fluid">
             <div class="flex items-center gap-3 mb-4">
                 <i class="pi pi-exclamation-triangle text-3xl text-amber-500"></i>
                 <p class="text-gray-700 text-sm">Êtes-vous sûr de vouloir supprimer le militaire <strong>{{ militaireToDelete?.nom }} {{ militaireToDelete?.prenom }}</strong> ?</p>
             </div>
             <template #footer>
                 <div class="flex justify-end gap-2">
-                    <Button label="Non" 
-                            icon="pi pi-times" 
-                            class="p-button-text text-gray-500 hover:text-gray-700"
-                            @click="deleteDialogVisible = false" />
-                    <Button label="Oui" 
-                            icon="pi pi-check" 
-                            class="bg-red-500 hover:bg-red-600 border-red-500 text-white"
-                            @click="deleteMilitaire" />
+                    <Button label="Non" icon="pi pi-times" class="p-button-text text-gray-500 hover:text-gray-700" @click="deleteDialogVisible = false" />
+                    <Button label="Oui" icon="pi pi-check" class="bg-red-500 hover:bg-red-600 border-red-500 text-white" @click="deleteMilitaire" />
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- Modal d'export -->
+        <Dialog v-model:visible="exportDialogVisible" header="Exporter la liste" :modal="true" :style="{ width: '90%', maxWidth: '500px' }" class="p-fluid">
+            <div class="space-y-4">
+                <p class="text-sm text-gray-600">Choisissez les options d'export :</p>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                    <Select v-model="exportFilters.grade" 
+                            :options="gradeOptions" 
+                            optionLabel="label" 
+                            optionValue="value"
+                            placeholder="Tous les grades"
+                            class="w-full"
+                            showClear />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                    <Select v-model="exportFilters.statut" 
+                            :options="statutOptions" 
+                            optionLabel="label" 
+                            optionValue="value"
+                            placeholder="Tous les statuts"
+                            class="w-full"
+                            showClear />
+                </div>
+                <div class="flex items-center gap-2">
+                    <Checkbox v-model="exportFilters.useCurrentFilters" binary />
+                    <label class="text-sm text-gray-700">Utiliser les filtres actuels</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <Checkbox v-model="exportFilters.includeSearch" binary />
+                    <label class="text-sm text-gray-700">Appliquer la recherche en cours</label>
+                </div>
+            </div>
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <Button label="Annuler" icon="pi pi-times" class="p-button-text text-gray-500 hover:text-gray-700" @click="exportDialogVisible = false" />
+                    <Button label="Exporter" icon="pi pi-file-excel" class="bg-green-500 hover:bg-green-600 border-green-500 text-white" :loading="exporting" @click="exportMilitaires" />
                 </div>
             </template>
         </Dialog>
@@ -239,6 +267,7 @@ import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
+import Checkbox from 'primevue/checkbox';
 import { useToast } from 'primevue/usetoast';
 import debounce from 'lodash/debounce';
 
@@ -246,8 +275,9 @@ const toast = useToast();
 const loading = ref(false);
 const deleteDialogVisible = ref(false);
 const militaireToDelete = ref(null);
+const exportDialogVisible = ref(false);
+const exporting = ref(false);
 
-// Options pour les filtres
 const gradeOptions = ref([]);
 const statutOptions = [
     { label: 'Actif', value: 'actif' },
@@ -258,33 +288,18 @@ const statutOptions = [
     { label: 'Stage', value: 'stage' }
 ];
 
-// Props reçus du contrôleur
 const props = defineProps({
-    militaires: {
-        type: Object,
-        required: true
-    },
-    statistiques: {
-        type: Object,
-        required: true
-    },
-    filters: {
-        type: Object,
-        default: () => ({})
-    },
-    grades: {
-        type: Array,
-        default: () => []
-    }
+    militaires: { type: Object, required: true },
+    statistiques: { type: Object, required: true },
+    filters: { type: Object, default: () => ({}) },
+    grades: { type: Array, default: () => [] }
 });
 
-// Formater l'ancienneté
 const formatAnciennete = (annees) => {
     if (!annees && annees !== 0) return '0 ans';
     return `${Math.floor(annees)} ans`;
 };
 
-// Initialiser les options de grade
 onMounted(() => {
     gradeOptions.value = [
         { label: 'Tous les grades', value: null },
@@ -292,14 +307,19 @@ onMounted(() => {
     ];
 });
 
-// État des filtres
 const filters = reactive({
     search: props.filters?.search || '',
     grade: props.filters?.grade || null,
     statut: props.filters?.statut || null
 });
 
-// Recherche automatique avec debounce
+const exportFilters = reactive({
+    grade: null,
+    statut: null,
+    useCurrentFilters: true,
+    includeSearch: true
+});
+
 const debouncedSearch = debounce(() => {
     loadMilitaires(1);
 }, 500);
@@ -307,21 +327,13 @@ const debouncedSearch = debounce(() => {
 const onSearchInput = () => {
     debouncedSearch();
 };
-
 const onFilterChange = () => {
     loadMilitaires(1);
 };
 
-// Watcher pour surveiller les changements de recherche
-watch(() => filters.search, () => {
-    debouncedSearch();
-});
+watch(() => filters.search, () => debouncedSearch());
+watch([() => filters.grade, () => filters.statut], () => loadMilitaires(1));
 
-watch([() => filters.grade, () => filters.statut], () => {
-    loadMilitaires(1);
-});
-
-// Style pour les badges selon le statut
 const getStatutStyle = (statut) => {
     const styles = {
         'actif': { background: '#7dd3fc', color: '#0369a1' },
@@ -334,10 +346,8 @@ const getStatutStyle = (statut) => {
     return styles[statut] || { background: '#e5e7eb', color: '#374151' };
 };
 
-// Charger les militaires
 const loadMilitaires = (page = 1) => {
     loading.value = true;
-    
     router.get(route('militaires.index'), {
         page,
         search: filters.search,
@@ -346,191 +356,136 @@ const loadMilitaires = (page = 1) => {
     }, {
         preserveState: true,
         preserveScroll: true,
-        onSuccess: () => {
-            loading.value = false;
-        },
+        onSuccess: () => { loading.value = false; },
         onError: () => {
             loading.value = false;
-            toast.add({
-                severity: 'error',
-                summary: 'Erreur',
-                detail: 'Impossible de charger les militaires',
-                life: 3000
-            });
+            toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les militaires', life: 3000 });
         }
     });
 };
 
-// Réinitialiser les filtres
 const resetFilters = () => {
     filters.search = '';
     filters.grade = null;
     filters.statut = null;
 };
 
-// Changement de page
-const onPageChange = (event) => {
-    changePage(event.page + 1);
-};
-
+const onPageChange = (event) => changePage(event.page + 1);
 const changePage = (page) => {
-    if (page >= 1 && page <= props.militaires.last_page) {
-        loadMilitaires(page);
+    if (page >= 1 && page <= props.militaires.last_page) loadMilitaires(page);
+};
+
+const viewMilitaire = (id) => router.visit(route('militaires.show', id));
+const editMilitaire = (id) => router.visit(route('militaires.edit', id));
+const createMilitaire = () => router.visit(route('militaires.create'));
+const importExcel = () => router.visit(route('militaires.import'));
+
+const openExportModal = () => {
+    exportFilters.grade = filters.grade;
+    exportFilters.statut = filters.statut;
+    exportFilters.useCurrentFilters = true;
+    exportFilters.includeSearch = true;
+    exportDialogVisible.value = true;
+};
+
+// ===== CORRECTION EXPORT =====
+const exportMilitaires = () => {
+    exporting.value = true;
+
+    console.log('🔍 Valeur des filtres actuels :', {
+        search: filters.search,
+        grade: filters.grade,
+        statut: filters.statut
+    });
+    console.log('🔍 Valeur des filtres export :', {
+        grade: exportFilters.grade,
+        statut: exportFilters.statut,
+        useCurrentFilters: exportFilters.useCurrentFilters,
+        includeSearch: exportFilters.includeSearch
+    });
+
+    let params = {};
+
+    if (exportFilters.useCurrentFilters) {
+        if (filters.search) params.search = filters.search;
+        if (filters.grade) params.grade = filters.grade;
+        if (filters.statut) params.statut = filters.statut;
+    } else {
+        if (exportFilters.includeSearch && filters.search) params.search = filters.search;
+        if (exportFilters.grade) params.grade = exportFilters.grade;
+        if (exportFilters.statut) params.statut = exportFilters.statut;
     }
+
+    // Fallback : si aucun paramètre, on prend ceux de la modal
+    if (Object.keys(params).length === 0) {
+        console.warn('⚠️ Aucun paramètre trouvé, utilisation des filtres de la modal par défaut');
+        if (exportFilters.grade) params.grade = exportFilters.grade;
+        if (exportFilters.statut) params.statut = exportFilters.statut;
+        if (exportFilters.includeSearch && filters.search) params.search = filters.search;
+    }
+
+    // Nettoyer les valeurs null/undefined
+    Object.keys(params).forEach(key => {
+        if (params[key] === null || params[key] === undefined || params[key] === '') delete params[key];
+    });
+
+    const baseUrl = '/militaires/export';
+    const queryString = new URLSearchParams(params).toString();
+    const url = baseUrl + (queryString ? '?' + queryString : '');
+
+    console.log('📤 URL finale d\'export :', url);
+
+    window.open(url, '_blank');
+
+    exporting.value = false;
+    exportDialogVisible.value = false;
 };
 
-// Actions sur les militaires
-const viewMilitaire = (id) => {
-    router.visit(route('militaires.show', id));
-};
-
-const editMilitaire = (id) => {
-    router.visit(route('militaires.edit', id));
-};
-
-const createMilitaire = () => {
-    router.visit(route('militaires.create'));
-};
-
-const importExcel = () => {
-    router.visit(route('militaires.import'));
-};
-
-// Confirmation de suppression
 const confirmDelete = (militaire) => {
     militaireToDelete.value = militaire;
     deleteDialogVisible.value = true;
 };
 
-// Supprimer un militaire
 const deleteMilitaire = () => {
     if (!militaireToDelete.value) return;
-    
     router.delete(route('militaires.destroy', militaireToDelete.value.id), {
         onSuccess: () => {
             deleteDialogVisible.value = false;
             militaireToDelete.value = null;
-            toast.add({
-                severity: 'success',
-                summary: 'Succès',
-                detail: 'Militaire supprimé avec succès',
-                life: 3000
-            });
+            toast.add({ severity: 'success', summary: 'Succès', detail: 'Militaire supprimé avec succès', life: 3000 });
             loadMilitaires(1);
         },
         onError: () => {
-            toast.add({
-                severity: 'error',
-                summary: 'Erreur',
-                detail: 'Impossible de supprimer le militaire',
-                life: 3000
-            });
+            toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de supprimer le militaire', life: 3000 });
         }
     });
 };
 </script>
 
 <style scoped>
-:deep(.p-datatable) {
-    font-size: 0.875rem;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr:hover) {
-    background-color: #f0f9ff;
-}
-
-:deep(.p-tag) {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    font-weight: 500;
-}
-
-:deep(.p-button.p-button-sm) {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
-}
-
-:deep(.p-button.p-button-rounded.p-button-text) {
-    width: 1.75rem;
-    height: 1.75rem;
-}
-
-/* Responsive pour le tableau sur mobile */
+:deep(.p-datatable) { font-size: 0.875rem; }
+:deep(.p-datatable .p-datatable-tbody > tr:hover) { background-color: #f0f9ff; }
+:deep(.p-tag) { padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-weight: 500; }
+:deep(.p-button.p-button-sm) { font-size: 0.75rem; padding: 0.375rem 0.75rem; }
+:deep(.p-button.p-button-rounded.p-button-text) { width: 1.75rem; height: 1.75rem; }
 @media (max-width: 768px) {
-    :deep(.p-datatable .p-datatable-thead > tr > th) {
-        font-size: 0.75rem;
-        padding: 0.5rem;
-    }
-    
-    :deep(.p-datatable .p-datatable-tbody > tr > td) {
-        font-size: 0.75rem;
-        padding: 0.5rem;
-    }
-    
-    :deep(.p-tag) {
-        font-size: 0.65rem;
-        padding: 0.2rem 0.4rem;
-    }
+    :deep(.p-datatable .p-datatable-thead > tr > th) { font-size: 0.75rem; padding: 0.5rem; }
+    :deep(.p-datatable .p-datatable-tbody > tr > td) { font-size: 0.75rem; padding: 0.5rem; }
+    :deep(.p-tag) { font-size: 0.65rem; padding: 0.2rem 0.4rem; }
 }
-
-/* Styles personnalisés */
-.text-sky-600 {
-    color: #0284c7;
-}
-
-.text-sky-500 {
-    color: #0ea5e9;
-}
-
-.text-emerald-600 {
-    color: #059669;
-}
-
-.text-amber-600 {
-    color: #d97706;
-}
-
-.text-red-600 {
-    color: #dc2626;
-}
-
-.bg-sky-500 {
-    background-color: #0ea5e9;
-}
-
-.hover\:bg-sky-600:hover {
-    background-color: #0284c7;
-}
-
-.border-sky-500 {
-    border-color: #0ea5e9;
-}
-
-.bg-gray-500 {
-    background-color: #6b7280;
-}
-
-.hover\:bg-gray-600:hover {
-    background-color: #4b5563;
-}
-
-.border-gray-500 {
-    border-color: #6b7280;
-}
-
-.bg-red-500 {
-    background-color: #ef4444;
-}
-
-.hover\:bg-red-600:hover {
-    background-color: #dc2626;
-}
-
-.border-red-500 {
-    border-color: #ef4444;
-}
-
-.text-white {
-    color: white;
-}
+.text-sky-600 { color: #0284c7; }
+.text-sky-500 { color: #0ea5e9; }
+.text-emerald-600 { color: #059669; }
+.text-amber-600 { color: #d97706; }
+.text-red-600 { color: #dc2626; }
+.bg-sky-500 { background-color: #0ea5e9; }
+.hover:bg-sky-600:hover { background-color: #0284c7; }
+.border-sky-500 { border-color: #0ea5e9; }
+.bg-gray-500 { background-color: #6b7280; }
+.hover:bg-gray-600:hover { background-color: #4b5563; }
+.border-gray-500 { border-color: #6b7280; }
+.bg-red-500 { background-color: #ef4444; }
+.hover:bg-red-600:hover { background-color: #dc2626; }
+.border-red-500 { border-color: #ef4444; }
+.text-white { color: white; }
 </style>

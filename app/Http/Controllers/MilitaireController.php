@@ -1,15 +1,18 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\Log;
 use App\Models\Militaire;
 use App\Models\Grade;
 use App\Models\Alerte;
 use App\Models\Certificat;
+use App\Models\Contrat;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\MilitairesExport;
 use App\Imports\MilitairesImport;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -17,85 +20,85 @@ use Illuminate\Support\Facades\Artisan;
 
 class MilitaireController extends Controller
 {
- /**
- * Affiche la liste des militaires actifs.
- */
-public function index(Request $request)
-{
-    $query = Militaire::query();
+    public function index(Request $request)
+    {
+        $query = Militaire::query();
+        $query->leftJoin('grades', 'militaires.grade_actuel', '=', 'grades.nom_grade');
 
-    // RECHERCHE AMÉLIORÉE POUR GÉRER LES ESPACES (CORRECTION LOCAL & SERVEUR)
-    if ($request->filled('search')) {
-        // Supprime les espaces en double ou en trop au début/fin
-        $search = preg_replace('/\s+/', ' ', $request->search);
-        $searchTerms = explode(' ', trim($search));
-        
-        $query->where(function($q) use ($searchTerms) {
-            foreach ($searchTerms as $term) {
-                if (!empty($term)) {
-                    // Force l'application du AND entre chaque mot, mais OR entre les colonnes
-                    $q->where(function($subQ) use ($term) {
-                        $subQ->where('nom', 'LIKE', "%{$term}%")
-                             ->orWhere('prenom', 'LIKE', "%{$term}%")
-                             ->orWhere('matricule', 'LIKE', "%{$term}%");
-                    });
+        if ($request->filled('search')) {
+            $search = preg_replace('/\s+/', ' ', $request->search);
+            $searchTerms = explode(' ', trim($search));
+            $query->where(function($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    if (!empty($term)) {
+                        $q->where(function($subQ) use ($term) {
+                            $subQ->where('militaires.nom', 'LIKE', "%{$term}%")
+                                 ->orWhere('militaires.prenom', 'LIKE', "%{$term}%")
+                                 ->orWhere('militaires.matricule', 'LIKE', "%{$term}%");
+                        });
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    if ($request->filled('grade')) {
-        $query->where('grade_actuel', $request->grade);
-    }
+        if ($request->filled('grade')) {
+            $query->where('militaires.grade_actuel', $request->grade);
+        }
 
-    if ($request->filled('statut')) {
-        $query->where('statut', $request->statut);
-    } else {
-        $query->where('statut', 'actif');
-    }
+        if ($request->filled('statut')) {
+            $query->where('militaires.statut', $request->statut);
+        } else {
+            $query->where('militaires.statut', 'actif');
+        }
 
-    $militaires = $query->orderBy('nom')
-        ->orderBy('prenom')
-        ->paginate(20)
-        ->withQueryString()
-        ->through(fn ($militaire) => [
-            'id' => $militaire->id,
-            'matricule' => $militaire->matricule,
-            'nom' => $militaire->nom,
-            'prenom' => $militaire->prenom,
-            'grade_actuel' => $militaire->grade_actuel,
-            'date_entree_service' => $militaire->date_entree_service?->format('d/m/Y'),
-            'date_derniere_promotion' => $militaire->date_derniere_promotion?->format('d/m/Y'),
-            'specialite' => $militaire->specialite,
-            'statut' => $militaire->statut,
-            'age' => $militaire->age,
-            'anciennete' => $militaire->anciennete,
-            'anciennete_grade' => $militaire->ancienneteGrade,
-            'a_permis_conduire' => $militaire->a_permis_conduire,
-            'alertes_count' => $militaire->alertes()->where('est_vue', false)->count(),
-            'est_eligible_retraite' => $militaire->estEligibleRetraite(),
-            'date_retraite' => $militaire->calculerDateRetraite()?->format('d/m/Y'),
+        $statsQuery = clone $query;
+        $statistiques = [
+            'total'     => (clone $statsQuery)->count(),
+            'actifs'    => (clone $statsQuery)->where('militaires.statut', 'actif')->count(),
+            'retraites' => (clone $statsQuery)->where('militaires.statut', 'retraité')->count(),
+            'alertes'   => Alerte::where('est_vue', false)
+                            ->whereIn('militaire_id', (clone $statsQuery)->select('militaires.id'))->count(),
+        ];
+
+        $query->orderByRaw('COALESCE(grades.ordre, 999) DESC')
+              ->orderBy('militaires.nom')
+              ->orderBy('militaires.prenom');
+
+        $militaires = $query->select('militaires.*')
+            ->paginate(20)
+            ->withQueryString()
+            ->through(fn ($militaire) => [
+                'id' => $militaire->id,
+                'matricule' => $militaire->matricule,
+                'nom' => $militaire->nom,
+                'prenom' => $militaire->prenom,
+                'grade_actuel' => $militaire->grade_actuel,
+                'date_entree_service' => $militaire->date_entree_service?->format('d/m/Y'),
+                'date_derniere_promotion' => $militaire->date_derniere_promotion?->format('d/m/Y'),
+                'specialite' => $militaire->specialite,
+                'position_actuelle' => $militaire->position_actuelle,
+                'fonction_passee' => $militaire->fonction_passee,
+                'fonction_actuelle' => $militaire->fonction_actuelle,
+                'statut' => $militaire->statut,
+                'age' => $militaire->age,
+                'anciennete' => $militaire->anciennete,
+                'anciennete_grade' => $militaire->ancienneteGrade,
+                'a_permis_conduire' => $militaire->a_permis_conduire,
+                'alertes_count' => $militaire->alertes()->where('est_vue', false)->count(),
+                'est_eligible_retraite' => $militaire->estEligibleRetraite(),
+                'date_retraite' => $militaire->calculerDateRetraite()?->format('d/m/Y'),
+            ]);
+
+        $grades = Grade::orderBy('ordre', 'desc')->get();
+
+        return Inertia::render('militaires/index', [
+            'militaires'   => $militaires,
+            'statistiques' => $statistiques,
+            'filters'      => $request->only(['search', 'grade', 'statut']),
+            'grades'       => $grades,
         ]);
-    
-    $statistiques = [
-        'total' => Militaire::count(),
-        'actifs' => Militaire::where('statut', 'actif')->count(),
-        'retraites' => Militaire::where('statut', 'retraité')->count(),
-        'alertes' => Alerte::where('est_vue', false)->count(),
-    ];
+    }
 
-    $grades = Grade::orderBy('ordre')->get();
-
-    return Inertia::render('militaires/index', [
-        'militaires' => $militaires,
-        'statistiques' => $statistiques,
-        'filters' => $request->only(['search', 'grade', 'statut']),
-        'grades' => $grades
-    ]);
-}
-    /**
-     * Affiche le formulaire de création d'un militaire.
-     */
     public function create()
     {
         $grades = Grade::orderBy('ordre')->get()->map(fn ($grade) => [
@@ -118,45 +121,49 @@ public function index(Request $request)
         ]);
     }
 
-    /**
-     * Enregistre un nouveau militaire.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'matricule' => 'required|string|unique:militaires',
-            'nom' => 'required|string|max:100',
-            'prenom' => 'required|string|max:100',
-            'date_naissance' => 'required|date',
-            'date_entree_service' => 'required|date|before_or_equal:today',
-            'grade_actuel' => 'required|string',
-            'date_derniere_promotion' => 'nullable|date|before_or_equal:today',
-            'specialite' => 'nullable|string|max:200',
-            'a_permis_conduire' => 'boolean',
-        ]);
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'matricule' => 'required|string|unique:militaires',
+        'nom' => 'required|string|max:100',
+        'prenom' => 'required|string|max:100',
+        'date_naissance' => 'required|date',
+        'date_entree_service' => 'required|date|before_or_equal:today',
+        'grade_actuel' => 'required|string',
+        'date_derniere_promotion' => 'nullable|date|before_or_equal:today',
+        'specialite' => 'nullable|string|max:200',
+        'position_actuelle' => 'nullable|string|max:255',
+        'fonction_passee' => 'nullable|string|max:255',
+        'fonction_actuelle' => 'nullable|string|max:255',
+        'a_permis_conduire' => 'boolean',
+    ]);
 
-        $data = $this->extractData($request);
-        $militaire = Militaire::create($data);
-        
-        if ($request->has('certificats')) {
-            $this->syncCertificats($militaire, $request->certificats);
-        }
+    $data = $this->extractData($request);
+    $militaire = Militaire::create($data);
 
-        $militaire->load('certificats');
-        $this->verifierAlertes($militaire);
-
-        return redirect()->route('militaires.index')
-            ->with('success', 'Militaire ajouté avec succès.');
+    if ($request->has('certificats')) {
+        $this->syncCertificats($militaire, $request->certificats);
     }
 
-    /**
-     * Affiche le détail d'un militaire.
-     */
+    $militaire->load('certificats');
+
+    // VÉRIFIER LES ALERTES (promotion, formation, retraite)
+    $this->verifierAlertes($militaire);
+
+    // 🔧 CRÉER UNIQUEMENT L'ALERTE CONTRAT (PAS DE CONTRAT)
+    $this->verifierAlerteContrat($militaire);
+
+    return redirect()->route('militaires.index')
+        ->with('success', 'Militaire ajouté avec succès.');
+}
+
     public function show(Militaire $militaire)
     {
         $militaire->load(['certificats', 'alertes' => function($q) {
             $q->orderBy('created_at', 'desc')->limit(10);
         }]);
+
+        $contratActif = $militaire->contrats()->where('statut', 'actif')->latest('date_debut')->first();
 
         $alertes = $militaire->alertes->map(fn ($alerte) => [
             'id' => $alerte->id,
@@ -171,8 +178,8 @@ public function index(Request $request)
             'id' => $certificat->id,
             'nom_certificat' => $certificat->nom_certificat,
             'niveau_certificat' => $certificat->niveau_certificat,
-            'date_obtention' => $certificat->pivot->date_obtention 
-                ? Carbon::parse($certificat->pivot->date_obtention)->format('d/m/Y') 
+            'date_obtention' => $certificat->pivot->date_obtention
+                ? Carbon::parse($certificat->pivot->date_obtention)->format('d/m/Y')
                 : null,
         ]);
 
@@ -189,6 +196,9 @@ public function index(Request $request)
             'grade_actuel' => $militaire->grade_actuel,
             'date_derniere_promotion' => $militaire->date_derniere_promotion?->format('d/m/Y'),
             'specialite' => $militaire->specialite,
+            'position_actuelle' => $militaire->position_actuelle,
+            'fonction_passee' => $militaire->fonction_passee,
+            'fonction_actuelle' => $militaire->fonction_actuelle,
             'statut' => $militaire->statut,
             'a_permis_conduire' => $militaire->a_permis_conduire,
             'a_fait_justice' => $militaire->a_fait_justice,
@@ -202,13 +212,17 @@ public function index(Request $request)
         return Inertia::render('militaires/show', [
             'militaire' => $militaireData,
             'certificats' => $certificats,
-            'alertes' => $alertes
+            'alertes' => $alertes,
+            'contratActif' => $contratActif ? [
+                'id' => $contratActif->id,
+                'date_debut' => $contratActif->date_debut?->format('d/m/Y'),
+                'date_fin' => $contratActif->date_fin?->format('d/m/Y'),
+                'duree_annees' => $contratActif->duree_annees,
+                'statut' => $contratActif->statut,
+            ] : null,
         ]);
     }
 
-    /**
-     * Affiche le formulaire d'édition d'un militaire.
-     */
     public function edit(Militaire $militaire)
     {
         $grades = Grade::orderBy('ordre')->get()->map(fn ($grade) => [
@@ -227,7 +241,9 @@ public function index(Request $request)
 
         $certificatsDuMilitaire = $militaire->certificats->keyBy('id')->map(fn ($certificat) => [
             'obtenu' => true,
-            'date_obtention' => $certificat->pivot->date_obtention ? Carbon::parse($certificat->pivot->date_obtention)->format('Y-m-d') : null,
+            'date_obtention' => $certificat->pivot->date_obtention
+                ? Carbon::parse($certificat->pivot->date_obtention)->format('Y-m-d')
+                : null,
         ]);
 
         return Inertia::render('militaires/edit', [
@@ -241,6 +257,9 @@ public function index(Request $request)
                 'grade_actuel' => $militaire->grade_actuel,
                 'date_derniere_promotion' => $militaire->date_derniere_promotion?->format('Y-m-d'),
                 'specialite' => $militaire->specialite,
+                'position_actuelle' => $militaire->position_actuelle,
+                'fonction_passee' => $militaire->fonction_passee,
+                'fonction_actuelle' => $militaire->fonction_actuelle,
                 'statut' => $militaire->statut,
                 'a_permis_conduire' => $militaire->a_permis_conduire,
                 'a_fait_justice' => $militaire->a_fait_justice,
@@ -252,9 +271,6 @@ public function index(Request $request)
         ]);
     }
 
-    /**
-     * Met à jour un militaire existant.
-     */
     public function update(Request $request, Militaire $militaire)
     {
         $validated = $request->validate([
@@ -266,6 +282,9 @@ public function index(Request $request)
             'grade_actuel' => 'required|string',
             'date_derniere_promotion' => 'nullable|date',
             'specialite' => 'nullable|string|max:200',
+            'position_actuelle' => 'nullable|string|max:255',
+            'fonction_passee' => 'nullable|string|max:255',
+            'fonction_actuelle' => 'nullable|string|max:255',
             'statut' => 'required|in:actif,retraité,déserteur,décédé,démobilisé,formation,stage',
             'a_permis_conduire' => 'boolean',
             'a_fait_justice' => 'boolean',
@@ -274,21 +293,20 @@ public function index(Request $request)
 
         $data = $this->extractData($request, $militaire);
         $militaire->update($data);
-        
+
         if ($request->has('certificats')) {
             $this->syncCertificats($militaire, $request->certificats);
         }
 
         $militaire->load('certificats');
+
+        // Vérifier les alertes (promotion, formation, retraite, contrat)
         $this->verifierAlertes($militaire);
 
         return redirect()->route('militaires.show', $militaire)
             ->with('success', 'Militaire mis à jour avec succès.');
     }
 
-    /**
-     * Supprime un militaire.
-     */
     public function destroy(Militaire $militaire)
     {
         $militaire->delete();
@@ -296,17 +314,11 @@ public function index(Request $request)
             ->with('success', 'Militaire supprimé avec succès.');
     }
 
-    /**
-     * Affiche le formulaire d'import Excel.
-     */
     public function importForm()
     {
         return Inertia::render('militaires/import');
     }
 
-    /**
-     * Traite l'import Excel.
-     */
     public function import(Request $request)
     {
         $request->validate([
@@ -325,7 +337,7 @@ public function index(Request $request)
             if (method_exists($import, 'getSkippedCount') && $import->getSkippedCount() > 0) {
                 $message .= " {$import->getSkippedCount()} ligne(s) ignorée(s).";
             }
-            
+
             return redirect()->route('militaires.index')->with('success', $message);
 
         } catch (\Exception $e) {
@@ -333,22 +345,50 @@ public function index(Request $request)
         }
     }
 
-    /**
-     * Télécharge un modèle Excel pour l'import.
-     */
     public function exportTemplate()
     {
-        return Excel::download(new MilitairesExportTemplate, 'modele_militaires.xlsx');
+        return Excel::download(new MilitairesExportTemplate(), 'modele_militaires.xlsx');
     }
 
-    /**
-     * Extrait et prépare les données du formulaire.
-     */
+    public function export(Request $request)
+    {
+        $search = $request->input('search');
+        $grade = $request->input('grade');
+        $statut = $request->input('statut');
+
+        \Log::info('📊 Export reçu - paramètres bruts :', $request->all());
+
+        $search = ($search && $search !== 'null') ? $search : null;
+        $grade = ($grade && $grade !== 'null') ? $grade : null;
+        $statut = ($statut && $statut !== 'null') ? $statut : null;
+
+        \Log::info('🎯 Paramètres après nettoyage :', [
+            'search' => $search,
+            'grade' => $grade,
+            'statut' => $statut
+        ]);
+
+        if ($grade) {
+            $count = Militaire::where('grade_actuel', $grade)->count();
+            \Log::info('📊 Nombre de militaires avec grade "' . $grade . '" : ' . $count);
+        }
+
+        return Excel::download(
+            new MilitairesExport($search, $grade, $statut),
+            'militaires_' . date('Y-m-d') . '.xlsx'
+        );
+    }
+
+    // =========================================================
+    // MÉTHODES PRIVÉES
+    // =========================================================
+
     private function extractData(Request $request, ?Militaire $militaire = null): array
     {
         $data = $request->only([
             'matricule', 'nom', 'prenom', 'date_naissance', 'date_entree_service',
-            'grade_actuel', 'date_derniere_promotion', 'specialite', 'statut'
+            'grade_actuel', 'date_derniere_promotion', 'specialite', 'statut',
+            'position_actuelle', 'fonction_passee', 'fonction_actuelle'
         ]);
 
         $booleanFields = [
@@ -394,9 +434,6 @@ public function index(Request $request)
         return $data;
     }
 
-    /**
-     * Synchronise les certificats associés au militaire.
-     */
     private function syncCertificats(Militaire $militaire, array $certificatsData)
     {
         $certificats = [];
@@ -411,48 +448,120 @@ public function index(Request $request)
     }
 
     /**
-     * Vérifie et crée les alertes pour un militaire.
+     * Vérifier toutes les alertes pour un militaire
+     * Promotion, Formation, Retraite, Contrat
      */
     public function verifierAlertes(Militaire $militaire)
     {
         $this->verifierPromotions($militaire);
         $this->verifierFormations($militaire);
         $this->verifierRetraite($militaire);
+        $this->verifierAlerteContrat($militaire);
     }
 
     /**
-     * Retourne l'année de proposition (31 décembre de l'année en cours)
+ * Vérifier et créer l'alerte contrat pour un militaire
+ * 🔧 UNIQUEMENT L'ALERTE, PAS LE CONTRAT
+ */
+/**
+ * Vérifier et créer l'alerte contrat pour un militaire
+ * 🔧 UNIQUEMENT L'ALERTE, PAS LE CONTRAT
+ */
+private function verifierAlerteContrat(Militaire $militaire): void
+{
+    // 1. Vérifier si le militaire est actif
+    if ($militaire->statut !== 'actif') {
+        return;
+    }
+
+    // 2. Grades éligibles (sous-officiers jusqu'à 1ère classe)
+    $gradesEligibles = [
+        'Soldat 2',
+        'Soldat 1',
+        'Caporal',
+        'Caporal-chef',
+        'Sergent',
+        'Sergent-Chef',
+        'Adjudant',
+        'Adjudant-Chef',
+        'Major'
+    ];
+
+    // 3. Vérifier si le grade est éligible
+    if (!in_array($militaire->grade_actuel, $gradesEligibles)) {
+        return;
+    }
+
+    // 4. Vérifier si le militaire a une date d'entrée en service
+    if (!$militaire->date_entree_service) {
+        return;
+    }
+
+    // 🔧 5. CORRECTION : Calculer les années de service (inverser l'ordre)
+    $serviceYears = floor($militaire->date_entree_service->diffInYears(now()));
+
+    // 6. Si moins de 5 ans, pas d'alerte
+    if ($serviceYears < 5) {
+        // Supprimer l'alerte si elle existe (au cas où)
+        Alerte::where('militaire_id', $militaire->id)
+            ->where('type_alerte', 'contrat')
+            ->delete();
+        return;
+    }
+
+    // 7. Supprimer l'ancienne alerte contrat
+    Alerte::where('militaire_id', $militaire->id)
+        ->where('type_alerte', 'contrat')
+        ->delete();
+
+    // 8. Créer l'alerte contrat
+    $message = "Renouvellement de contrat requis pour {$militaire->prenom} {$militaire->nom} ({$serviceYears} ans de service) - Grade: {$militaire->grade_actuel}";
+
+    Alerte::create([
+        'militaire_id' => $militaire->id,
+        'type_alerte' => 'contrat',
+        'message' => $message,
+        'date_echeance' => now()->addMonths(6),
+        'est_vue' => false,
+    ]);
+}
+
+    /**
+     * Créer une alerte contrat
      */
+    private function creerAlerteContrat(Militaire $militaire, int $serviceYears): void
+    {
+        $message = "Renouvellement de contrat requis pour {$militaire->prenom} {$militaire->nom} ({$serviceYears} ans de service) - Grade: {$militaire->grade_actuel}";
+
+        $this->creerAlerte($militaire, 'contrat', $message, now()->addMonths(6));
+    }
+
     private function getDateProposition()
     {
         $annee = Carbon::now()->year;
         return Carbon::create($annee, 12, 31, 23, 59, 59);
     }
 
-    /**
-     * Calcule la date d'ancienneté réelle pour une promotion.
-     */
-    private function getDateAnciennetePromotion($militaire, $gradeCible)
+    private function getDateAnciennetePromotion(Militaire $militaire, string $gradeCible)
     {
         $gradeActuel = $militaire->grade_actuel;
         $dateDernierePromotion = $militaire->date_derniere_promotion;
         $dateEntreeService = $militaire->date_entree_service;
-        
-        // Règles d'ancienneté requise par type de promotion
+
         $regles = [
-            'Caporal' => ['grade' => 'Soldat 1', 'annees' => 5, 'base' => 'entree'],
-            'Sergent' => ['grade' => 'Caporal', 'annees' => 3, 'base' => 'promotion'],
-            'Sergent-Chef' => ['grade' => 'Sergent', 'annees' => 2, 'base' => 'promotion'],
-            'Adjudant' => ['grade' => 'Sergent-Chef', 'annees' => 3, 'base' => 'promotion'],
-            'Adjudant-Chef' => ['grade' => 'Adjudant', 'annees' => 2, 'base' => 'promotion'],
-            'Lieutenant' => ['grade' => 'Sous-lieutenant', 'annees' => 2, 'base' => 'promotion'],
-            'Capitaine' => ['grade' => 'Lieutenant', 'annees' => 3, 'base' => 'promotion'],
-            'Commandant' => ['grade' => 'Capitaine', 'annees' => 3, 'base' => 'promotion'],
-            'Lieutenant-colonel' => ['grade' => 'Commandant', 'annees' => 3, 'base' => 'promotion'],
-            'Colonel' => ['grade' => 'Lieutenant-colonel', 'annees' => 3, 'base' => 'promotion'],
-            'Colonel-Major' => ['grade' => 'Colonel', 'annees' => 6, 'base' => 'promotion'],
+            'Caporal'          => ['grade' => 'Soldat 1',         'annees' => 5, 'base' => 'entree'],
+            'Sergent'          => ['grade' => 'Caporal',          'annees' => 3, 'base' => 'promotion'],
+            'Sergent-Chef'     => ['grade' => 'Sergent',          'annees' => 2, 'base' => 'promotion'],
+            'Adjudant'         => ['grade' => 'Sergent-Chef',     'annees' => 3, 'base' => 'promotion'],
+            'Adjudant-Chef'    => ['grade' => 'Adjudant',         'annees' => 2, 'base' => 'promotion'],
+            'Lieutenant'       => ['grade' => 'Sous-lieutenant',  'annees' => 2, 'base' => 'promotion'],
+            'Capitaine'        => ['grade' => 'Lieutenant',       'annees' => 3, 'base' => 'promotion'],
+            'Commandant'       => ['grade' => 'Capitaine',        'annees' => 3, 'base' => 'promotion'],
+            'Lieutenant-colonel' => ['grade' => 'Commandant',    'annees' => 3, 'base' => 'promotion'],
+            'Colonel'          => ['grade' => 'Lieutenant-colonel','annees' => 3, 'base' => 'promotion'],
+            'Colonel-Major'    => ['grade' => 'Colonel',          'annees' => 6, 'base' => 'promotion'],
         ];
-        
+
         foreach ($regles as $cible => $regle) {
             if ($cible === $gradeCible && $regle['grade'] === $gradeActuel) {
                 if ($regle['base'] === 'entree' && $dateEntreeService) {
@@ -462,14 +571,11 @@ public function index(Request $request)
                 }
             }
         }
-        
+
         return null;
     }
 
-    /**
-     * Vérifie les éligibilités aux promotions et crée les alertes.
-     */
-    private function verifierPromotions(Militaire $militaire)
+    private function verifierPromotions(Militaire $militaire): void
     {
         if ($militaire->statut !== 'actif') return;
 
@@ -478,17 +584,13 @@ public function index(Request $request)
         $ancienneteGrade = $militaire->ancienneteGrade;
         $conditionsBase = !$militaire->a_fait_justice && !$militaire->a_fait_discipline;
         $certificatsObtenus = $militaire->certificats->pluck('niveau_certificat')->toArray();
-        
         $dateProposition = $this->getDateProposition();
-        $anneeProposition = $dateProposition->format('Y');
 
-        // Soldat 1 → Caporal
         if ($grade == 'Soldat 1' && in_array('CAT1', $certificatsObtenus) && $conditionsBase && $militaire->anciennete >= 5) {
             $dateAnciennete = Carbon::parse($militaire->date_entree_service)->addYears(5);
             $this->creerAlertePromotion($militaire, 'Caporal', $dateProposition, $dateAnciennete);
         }
 
-        // Caporal → Sergent
         if ($grade == 'Caporal' && in_array('CAT1', $certificatsObtenus) && in_array('CAT2', $certificatsObtenus) && $conditionsBase) {
             $certifCAT1 = $militaire->certificats->where('niveau_certificat', 'CAT1')->first();
             $dateAnciennete = null;
@@ -498,71 +600,60 @@ public function index(Request $request)
             $this->creerAlertePromotion($militaire, 'Sergent', $dateProposition, $dateAnciennete);
         }
 
-        // Caporal → Caporal-chef
         if ($grade == 'Caporal' && in_array('CAT1', $certificatsObtenus) && !in_array('CAT2', $certificatsObtenus) && $age >= 47 && $ancienneteGrade >= 3 && $conditionsBase) {
-            $dateAnciennete = $militaire->date_derniere_promotion ? Carbon::parse($militaire->date_derniere_promotion)->addYears(3) : null;
+            $dateAnciennete = $militaire->date_derniere_promotion
+                ? Carbon::parse($militaire->date_derniere_promotion)->addYears(3)
+                : null;
             $this->creerAlertePromotion($militaire, 'Caporal-chef', $dateProposition, $dateAnciennete);
         }
 
-        // Sergent → Sergent-Chef
         if ($grade == 'Sergent' && $conditionsBase && $ancienneteGrade >= 2 && $militaire->anciennete >= 5) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(2);
             $this->creerAlertePromotion($militaire, 'Sergent-Chef', $dateProposition, $dateAnciennete);
         }
 
-        // Sergent-Chef → Adjudant
         if ($grade == 'Sergent-Chef' && $conditionsBase && $ancienneteGrade >= 3) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(3);
             $this->creerAlertePromotion($militaire, 'Adjudant', $dateProposition, $dateAnciennete);
         }
 
-        // Adjudant → Adjudant-Chef
         if ($grade == 'Adjudant' && $conditionsBase && $ancienneteGrade >= 2) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(2);
             $this->creerAlertePromotion($militaire, 'Adjudant-Chef', $dateProposition, $dateAnciennete);
         }
 
-        // Sous-lieutenant → Lieutenant
         if ($grade == 'Sous-lieutenant' && $ancienneteGrade >= 2) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(2);
             $this->creerAlertePromotion($militaire, 'Lieutenant', $dateProposition, $dateAnciennete);
         }
 
-        // Lieutenant → Capitaine
         if ($grade == 'Lieutenant' && $ancienneteGrade >= 3) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(3);
             $this->creerAlertePromotion($militaire, 'Capitaine', $dateProposition, $dateAnciennete);
         }
 
-        // Capitaine → Commandant
         if ($grade == 'Capitaine' && $ancienneteGrade >= 3) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(3);
             $this->creerAlertePromotion($militaire, 'Commandant', $dateProposition, $dateAnciennete);
         }
 
-        // Commandant → Lieutenant-colonel
         if ($grade == 'Commandant' && $ancienneteGrade >= 3) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(3);
             $this->creerAlertePromotion($militaire, 'Lieutenant-colonel', $dateProposition, $dateAnciennete);
         }
 
-        // Lieutenant-colonel → Colonel
         if ($grade == 'Lieutenant-colonel' && $ancienneteGrade >= 3) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(3);
             $this->creerAlertePromotion($militaire, 'Colonel', $dateProposition, $dateAnciennete);
         }
 
-        // Colonel → Colonel-Major
         if ($grade == 'Colonel' && $ancienneteGrade >= 6) {
             $dateAnciennete = Carbon::parse($militaire->date_derniere_promotion)->addYears(6);
             $this->creerAlertePromotion($militaire, 'Colonel-Major', $dateProposition, $dateAnciennete);
         }
     }
 
-    /**
-     * Vérifie les éligibilités aux formations et crée les alertes.
-     */
-    private function verifierFormations(Militaire $militaire)
+    private function verifierFormations(Militaire $militaire): void
     {
         if ($militaire->statut !== 'actif') return;
 
@@ -572,117 +663,95 @@ public function index(Request $request)
         $ancienneteGrade = $militaire->ancienneteGrade;
         $certificatsObtenus = $militaire->certificats->pluck('niveau_certificat')->toArray();
         $conditionsBase = !$militaire->a_fait_justice && !$militaire->a_fait_discipline;
-        
         $dateProposition = $this->getDateProposition();
-        $anneeProposition = $dateProposition->format('Y');
 
-        // CAT1
-if (in_array($grade, ['Soldat 2', 'Soldat 1']) && !in_array('CAT1', $certificatsObtenus) && $ancienneteGrade >= 5 && $conditionsBase) {            $dateConditions = Carbon::parse($militaire->date_entree_service)->addYears(5);
-            $this->creerAlerteFormation($militaire, 'CAT1', 'Certificat d\'Aptitude Technique Niveau 1', $dateProposition, $dateConditions);
+        if (in_array($grade, ['Soldat 2', 'Soldat 1']) && !in_array('CAT1', $certificatsObtenus) && $ancienneteGrade >= 5 && $conditionsBase) {
+            $dateConditions = Carbon::parse($militaire->date_entree_service)->addYears(5);
+            $this->creerAlerteFormation($militaire, 'CAT1', "Certificat d'Aptitude Technique Niveau 1", $dateProposition, $dateConditions);
         }
 
-        // CAT2
         if ($grade == 'Caporal' && $age < 47 && !in_array('CAT2', $certificatsObtenus) && $ancienneteGrade >= 3 && $conditionsBase && in_array('CAT1', $certificatsObtenus)) {
             $certifCAT1 = $militaire->certificats->where('niveau_certificat', 'CAT1')->first();
             $dateConditions = null;
             if ($certifCAT1 && $certifCAT1->pivot->date_obtention) {
                 $dateConditions = Carbon::parse($certifCAT1->pivot->date_obtention)->addYears(3);
             }
-            $this->creerAlerteFormation($militaire, 'CAT2', 'Certificat d\'Aptitude Technique Niveau 2', $dateProposition, $dateConditions);
+            $this->creerAlerteFormation($militaire, 'CAT2', "Certificat d'Aptitude Technique Niveau 2", $dateProposition, $dateConditions);
         }
 
-        // CIA
         if (in_array($grade, ['Sergent', 'Sergent-Chef', 'Adjudant', 'Adjudant-Chef']) && !in_array('CIA', $certificatsObtenus) && $conditionsBase && $militaire->a_permis_conduire) {
-            $this->creerAlerteFormation($militaire, 'CIA', 'Certificat d\'Instruction d\'Armes', $dateProposition, null);
+            $this->creerAlerteFormation($militaire, 'CIA', "Certificat d'Instruction d'Armes", $dateProposition, null);
         }
 
-        // BA1
         if (in_array($grade, ['Sergent-Chef', 'Adjudant', 'Adjudant-Chef']) && !in_array('BA1', $certificatsObtenus) && in_array('CIA', $certificatsObtenus) && $conditionsBase && $anciennete >= 8) {
             $certifCIA = $militaire->certificats->where('niveau_certificat', 'CIA')->first();
             $dateConditions = null;
             if ($certifCIA && $certifCIA->pivot->date_obtention) {
                 $dateConditions = Carbon::parse($certifCIA->pivot->date_obtention)->addYears(3);
             }
-            $this->creerAlerteFormation($militaire, 'BA1', 'Brevet d\'Aptitude Niveau 1', $dateProposition, $dateConditions);
+            $this->creerAlerteFormation($militaire, 'BA1', "Brevet d'Aptitude Niveau 1", $dateProposition, $dateConditions);
         }
 
-        // BA2
         if (in_array($grade, ['Adjudant', 'Adjudant-Chef']) && !in_array('BA2', $certificatsObtenus) && in_array('BA1', $certificatsObtenus) && $conditionsBase) {
             $certifBA1 = $militaire->certificats->where('niveau_certificat', 'BA1')->first();
             $dateConditions = null;
             if ($certifBA1 && $certifBA1->pivot->date_obtention) {
                 $dateConditions = Carbon::parse($certifBA1->pivot->date_obtention)->addYears(3);
             }
-            $this->creerAlerteFormation($militaire, 'BA2', 'Brevet d\'Aptitude Niveau 2', $dateProposition, $dateConditions);
+            $this->creerAlerteFormation($militaire, 'BA2', "Brevet d'Aptitude Niveau 2", $dateProposition, $dateConditions);
         }
 
-        // APLI
         if (in_array($grade, ['Sous-lieutenant', 'Lieutenant', 'Capitaine']) && !in_array('APLI', $certificatsObtenus) && !in_array('CFCU', $certificatsObtenus) && $age <= 50) {
-            $this->creerAlerteFormation($militaire, 'APLI', 'Cour d\'Application', $dateProposition, null);
+            $this->creerAlerteFormation($militaire, 'APLI', "Cour d'Application", $dateProposition, null);
         }
 
-        // CFCU
         if (in_array($grade, ['Lieutenant', 'Capitaine']) && !in_array('CFCU', $certificatsObtenus)) {
             if ($grade == 'Capitaine' || in_array('APLI', $certificatsObtenus)) {
-                $this->creerAlerteFormation($militaire, 'CFCU', 'Cour des Futurs Commandants d\'Unité', $dateProposition, null);
+                $this->creerAlerteFormation($militaire, 'CFCU', "Cour des Futurs Commandants d'Unité", $dateProposition, null);
             }
         }
 
-        // CEM
         if (in_array($grade, ['Capitaine', 'Commandant']) && !in_array('CEM', $certificatsObtenus)) {
             if (($grade == 'Capitaine' && $ancienneteGrade >= 3) || $grade == 'Commandant') {
                 if ($age <= 45) {
-                    $this->creerAlerteFormation($militaire, 'CEM', 'Cour d\'État-Major', $dateProposition, null);
+                    $this->creerAlerteFormation($militaire, 'CEM', "Cour d'État-Major", $dateProposition, null);
                 }
             }
         }
 
-        // Certificat d'État-Major
         if ($grade == 'Commandant' && $age > 45 && !in_array('CERT_EM', $certificatsObtenus)) {
-            $this->creerAlerteFormation($militaire, 'CERT_EM', 'Certificat d\'État-Major', $dateProposition, null);
+            $this->creerAlerteFormation($militaire, 'CERT_EM', "Certificat d'État-Major", $dateProposition, null);
         }
 
-        // École de Guerre
         if (in_array($grade, ['Lieutenant-colonel', 'Colonel', 'Colonel-Major']) && !in_array('ECOLE_GUERRE', $certificatsObtenus) && $ancienneteGrade >= 2 && $age <= 53) {
-            $this->creerAlerteFormation($militaire, 'ECOLE_GUERRE', 'École de Guerre', $dateProposition, null);
+            $this->creerAlerteFormation($militaire, 'ECOLE_GUERRE', "École de Guerre", $dateProposition, null);
         }
     }
 
-    /**
-     * Crée une alerte de promotion.
-     */
-    private function creerAlertePromotion($militaire, $gradeCible, $dateProposition, $dateAnciennete)
+    private function creerAlertePromotion(Militaire $militaire, string $gradeCible, $dateProposition, $dateAnciennete): void
     {
         $anneeProposition = $dateProposition->format('Y');
         $dateAncienneteTexte = $dateAnciennete ? $dateAnciennete->format('d/m/Y') : 'conditions remplies';
         $message = "Proposable pour {$anneeProposition} (ancienneté atteinte le {$dateAncienneteTexte}) - Promotion à {$gradeCible}";
-        
         $this->creerAlerte($militaire, 'promotion', $message, $dateProposition);
     }
 
-    /**
-     * Crée une alerte de formation.
-     */
-    private function creerAlerteFormation($militaire, $formation, $nomFormation, $dateProposition, $dateConditions)
+    private function creerAlerteFormation(Militaire $militaire, string $formation, string $nomFormation, $dateProposition, $dateConditions): void
     {
         $anneeProposition = $dateProposition->format('Y');
         $dateConditionsTexte = $dateConditions ? $dateConditions->format('d/m/Y') : 'conditions remplies';
         $message = "Proposable pour {$anneeProposition} (conditions remplies le {$dateConditionsTexte}) - Formation {$nomFormation}";
-        
         $this->creerAlerte($militaire, 'formation', $message, $dateProposition);
     }
 
-    /**
-     * Vérifie les retraites proches.
-     */
-    private function verifierRetraite(Militaire $militaire)
+    private function verifierRetraite(Militaire $militaire): void
     {
         $dateRetraite = $militaire->calculerDateRetraite();
-        
+
         if ($dateRetraite) {
             $diffJours = Carbon::now()->startOfDay()->diffInDays($dateRetraite);
             $moisRestants = floor($diffJours / 30);
-            
+
             if ($moisRestants <= 12 && $diffJours >= 0) {
                 $message = "Retraite dans {$moisRestants} mois (le " . $dateRetraite->format('d/m/Y') . ")";
                 $this->creerAlerte($militaire, 'retraite', $message, $dateRetraite);
@@ -690,10 +759,7 @@ if (in_array($grade, ['Soldat 2', 'Soldat 1']) && !in_array('CAT1', $certificats
         }
     }
 
-    /**
-     * Crée une alerte pour un militaire.
-     */
-    private function creerAlerte(Militaire $militaire, $type, $message, $dateEcheance = null)
+    private function creerAlerte(Militaire $militaire, string $type, string $message, $dateEcheance = null): void
     {
         $existe = Alerte::where('militaire_id', $militaire->id)
             ->where('type_alerte', $type)
@@ -703,20 +769,19 @@ if (in_array($grade, ['Soldat 2', 'Soldat 1']) && !in_array('CAT1', $certificats
 
         if (!$existe) {
             $echeance = $dateEcheance ?? Carbon::now()->addDays(2);
-            
             Alerte::create([
                 'militaire_id' => $militaire->id,
-                'type_alerte' => $type,
-                'message' => $message,
+                'type_alerte'  => $type,
+                'message'      => $message,
                 'date_echeance' => $echeance,
             ]);
         }
     }
 }
 
-/**
- * Classe d'export pour le modèle Excel (template d'import)
- */
+// =========================================================
+// Classe template d'export (modèle pour import)
+// =========================================================
 class MilitairesExportTemplate implements FromArray, WithHeadings
 {
     public function array(): array
@@ -725,9 +790,10 @@ class MilitairesExportTemplate implements FromArray, WithHeadings
             [
                 '12345', 'DIALLO', 'Baba', '1984-07-19', '2015-06-01',
                 'Soldat', '', 'Infanterie', 'actif', 1,
+                0, '', 0, '', 0, '', 0, '', 0, '', 0, '',
                 0, '', 0, '', 0, '', 0, '', 0, '',
-                0, '', 0, '', 0, '', 0, '',
                 0, '', 0, '', 0, '', 0, '', 0, '',
+                'Position actuelle', 'Fonction passée', 'Fonction actuelle'
             ]
         ];
     }
@@ -745,6 +811,7 @@ class MilitairesExportTemplate implements FromArray, WithHeadings
             'a_fait_cfcu', 'date_obtention_cfcu', 'a_fait_cem', 'date_obtention_cem',
             'a_fait_certificat_etat_major', 'date_obtention_certificat_etat_major',
             'a_fait_ecole_guerre', 'date_obtention_ecole_guerre',
+            'position_actuelle', 'fonction_passee', 'fonction_actuelle'
         ];
     }
 }

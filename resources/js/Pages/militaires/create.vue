@@ -18,7 +18,7 @@
                                         <span class="text-sky-600">Nouveau militaire</span>
                                     </div>
                                 </template>
-                                
+
                                 <template #content>
                                     <!-- Informations générales -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -27,26 +27,24 @@
                                             <label for="matricule" class="block text-sm font-medium text-gray-700 mb-2">
                                                 Matricule <span class="text-red-500">*</span>
                                             </label>
-                                            <InputText id="matricule" 
-                                                      v-model="form.matricule" 
-                                                      class="w-full"
-                                                      :class="{ 'p-invalid': errors.matricule }" />
-                                            <small v-if="errors.matricule" class="text-red-500">{{ errors.matricule }}</small>
+                                            <InputText id="matricule" v-model="form.matricule" class="w-full"
+                                                :class="{ 'p-invalid': errors.matricule }" />
+                                            <small v-if="errors.matricule" class="text-red-500">{{ errors.matricule
+                                                }}</small>
                                         </div>
 
                                         <!-- Grade actuel -->
                                         <div class="field">
-                                            <label for="grade_actuel" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="grade_actuel"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
                                                 Grade actuel <span class="text-red-500">*</span>
                                             </label>
-                                            <Select v-model="form.grade_actuel" 
-                                                    :options="grades" 
-                                                    optionLabel="nom_grade" 
-                                                    optionValue="nom_grade"
-                                                    placeholder="Sélectionner un grade"
-                                                    class="w-full"
-                                                    :class="{ 'p-invalid': errors.grade_actuel }" />
-                                            <small v-if="errors.grade_actuel" class="text-red-500">{{ errors.grade_actuel }}</small>
+                                            <Select v-model="form.grade_actuel" :options="grades"
+                                                optionLabel="nom_grade" optionValue="nom_grade"
+                                                placeholder="Sélectionner un grade" class="w-full"
+                                                :class="{ 'p-invalid': errors.grade_actuel }" />
+                                            <small v-if="errors.grade_actuel" class="text-red-500">{{
+                                                errors.grade_actuel }}</small>
                                         </div>
                                     </div>
 
@@ -56,10 +54,8 @@
                                             <label for="nom" class="block text-sm font-medium text-gray-700 mb-2">
                                                 Nom <span class="text-red-500">*</span>
                                             </label>
-                                            <InputText id="nom" 
-                                                      v-model="form.nom" 
-                                                      class="w-full"
-                                                      :class="{ 'p-invalid': errors.nom }" />
+                                            <InputText id="nom" v-model="form.nom" class="w-full"
+                                                :class="{ 'p-invalid': errors.nom }" />
                                             <small v-if="errors.nom" class="text-red-500">{{ errors.nom }}</small>
                                         </div>
 
@@ -67,10 +63,8 @@
                                             <label for="prenom" class="block text-sm font-medium text-gray-700 mb-2">
                                                 Prénom <span class="text-red-500">*</span>
                                             </label>
-                                            <InputText id="prenom" 
-                                                      v-model="form.prenom" 
-                                                      class="w-full"
-                                                      :class="{ 'p-invalid': errors.prenom }" />
+                                            <InputText id="prenom" v-model="form.prenom" class="w-full"
+                                                :class="{ 'p-invalid': errors.prenom }" />
                                             <small v-if="errors.prenom" class="text-red-500">{{ errors.prenom }}</small>
                                         </div>
                                     </div>
@@ -78,74 +72,97 @@
                                     <!-- Dates -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <div class="field">
-                                            <label for="date_naissance" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="date_naissance"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
                                                 Date de naissance <span class="text-red-500">*</span>
                                             </label>
-                                            <DatePicker id="date_naissance" 
-                                                        v-model="form.date_naissance" 
-                                                        dateFormat="dd/mm/yy"
-                                                        showIcon
-                                                        class="w-full"
-                                                        :class="{ 'p-invalid': errors.date_naissance }" />
-                                            <small v-if="errors.date_naissance" class="text-red-500">{{ errors.date_naissance }}</small>
+                                            <DatePicker id="date_naissance" v-model="form.date_naissance"
+                                                dateFormat="dd/mm/yy" showIcon class="w-full"
+                                                :class="{ 'p-invalid': errors.date_naissance }" />
+                                            <small v-if="errors.date_naissance" class="text-red-500">{{
+                                                errors.date_naissance }}</small>
                                         </div>
 
                                         <div class="field">
-                                            <label for="date_entree_service" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="date_entree_service"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
                                                 Date d'entrée en service <span class="text-red-500">*</span>
                                             </label>
-                                            <DatePicker id="date_entree_service" 
-                                                        v-model="form.date_entree_service" 
-                                                        dateFormat="dd/mm/yy"
-                                                        showIcon
-                                                        class="w-full"
-                                                        :class="{ 'p-invalid': errors.date_entree_service }" />
-                                            <small v-if="errors.date_entree_service" class="text-red-500">{{ errors.date_entree_service }}</small>
+                                            <DatePicker id="date_entree_service" v-model="form.date_entree_service"
+                                                dateFormat="dd/mm/yy" showIcon class="w-full"
+                                                :class="{ 'p-invalid': errors.date_entree_service }" />
+                                            <small v-if="errors.date_entree_service" class="text-red-500">{{
+                                                errors.date_entree_service }}</small>
                                         </div>
                                     </div>
 
                                     <!-- Autres informations -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <div class="field">
-                                            <label for="date_derniere_promotion" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="date_derniere_promotion"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
                                                 Date dernière promotion
                                             </label>
-                                            <DatePicker id="date_derniere_promotion" 
-                                                        v-model="form.date_derniere_promotion" 
-                                                        dateFormat="dd/mm/yy"
-                                                        showIcon
-                                                        class="w-full" />
+                                            <DatePicker id="date_derniere_promotion"
+                                                v-model="form.date_derniere_promotion" dateFormat="dd/mm/yy" showIcon
+                                                class="w-full" />
                                         </div>
 
                                         <div class="field">
-                                            <label for="specialite" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label for="specialite"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
                                                 Spécialité
                                             </label>
-                                            <InputText id="specialite" 
-                                                      v-model="form.specialite" 
-                                                      class="w-full" />
+                                            <InputText id="specialite" v-model="form.specialite" class="w-full" />
+                                        </div>
+                                    </div>
+
+                                    <!-- NOUVEAUX CHAMPS : Position, Fonction passée, Fonction actuelle -->
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                        <div class="field">
+                                            <label for="position_actuelle"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-map-marker text-sky-500 mr-1"></i> Position actuelle
+                                            </label>
+                                            <InputText id="position_actuelle" v-model="form.position_actuelle"
+                                                class="w-full" />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="fonction_passee"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-history text-sky-500 mr-1"></i> Fonction passée
+                                            </label>
+                                            <InputText id="fonction_passee" v-model="form.fonction_passee"
+                                                class="w-full" />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="fonction_actuelle"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-briefcase text-sky-500 mr-1"></i> Fonction actuelle
+                                            </label>
+                                            <InputText id="fonction_actuelle" v-model="form.fonction_actuelle"
+                                                class="w-full" />
                                         </div>
                                     </div>
 
                                     <!-- Statut et Permis -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <div class="field">
-                                            <label for="statut" class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                                            <Select v-model="form.statut" 
-                                                    :options="statutOptions" 
-                                                    optionLabel="label" 
-                                                    optionValue="value"
-                                                    placeholder="Sélectionner un statut"
-                                                    class="w-full"
-                                                    :class="{ 'p-invalid': errors.statut }" />
+                                            <label for="statut"
+                                                class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                                            <Select v-model="form.statut" :options="statutOptions" optionLabel="label"
+                                                optionValue="value" placeholder="Sélectionner un statut" class="w-full"
+                                                :class="{ 'p-invalid': errors.statut }" />
                                             <small v-if="errors.statut" class="text-red-500">{{ errors.statut }}</small>
                                         </div>
 
                                         <div class="flex items-center mt-6">
-                                            <Checkbox id="a_permis_conduire" 
-                                                     v-model="form.a_permis_conduire" 
-                                                     :binary="true" />
-                                            <label for="a_permis_conduire" class="ml-2 text-sm font-medium text-gray-700">
+                                            <Checkbox id="a_permis_conduire" v-model="form.a_permis_conduire"
+                                                :binary="true" />
+                                            <label for="a_permis_conduire"
+                                                class="ml-2 text-sm font-medium text-gray-700">
                                                 Permis de conduire obtenu
                                             </label>
                                         </div>
@@ -154,19 +171,17 @@
                                     <!-- Problèmes judiciaire et disciplinaire -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <div class="flex items-center gap-2">
-                                            <Checkbox id="a_fait_justice" 
-                                                     v-model="form.a_fait_justice" 
-                                                     :binary="true" />
+                                            <Checkbox id="a_fait_justice" v-model="form.a_fait_justice"
+                                                :binary="true" />
                                             <label for="a_fait_justice" class="text-sm font-medium text-gray-700">
-                                                A fait justice
+                                                Judiciaire
                                             </label>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <Checkbox id="a_fait_discipline" 
-                                                     v-model="form.a_fait_discipline" 
-                                                     :binary="true" />
+                                            <Checkbox id="a_fait_discipline" v-model="form.a_fait_discipline"
+                                                :binary="true" />
                                             <label for="a_fait_discipline" class="text-sm font-medium text-gray-700">
-                                                A fait discipline
+                                                Punis
                                             </label>
                                         </div>
                                     </div>
@@ -179,9 +194,10 @@
                                                 <span class="text-sky-600">Certificats et formations obtenus</span>
                                             </div>
                                         </template>
-                                        
+
                                         <template #content>
-                                            <div v-if="filteredCertificats.length === 0" class="text-center py-4 text-gray-500">
+                                            <div v-if="filteredCertificats.length === 0"
+                                                class="text-center py-4 text-gray-500">
                                                 <i class="pi pi-info-circle text-2xl mb-2"></i>
                                                 <p>Aucune formation disponible pour ce grade.</p>
                                             </div>
@@ -192,39 +208,39 @@
                                                         Formations disponibles pour ce grade :
                                                     </h4>
                                                 </div>
-                                                
+
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div v-for="certificat in filteredCertificats" 
-                                                         :key="certificat.id" 
-                                                         class="border rounded-lg p-3 hover:border-sky-300 transition-all">
+                                                    <div v-for="certificat in filteredCertificats" :key="certificat.id"
+                                                        class="border rounded-lg p-3 hover:border-sky-300 transition-all">
                                                         <div class="flex items-start justify-between">
                                                             <div class="flex items-start gap-2">
                                                                 <Checkbox :id="'certif_' + certificat.id"
-                                                                          v-model="form.certificats[certificat.id].obtenu"
-                                                                          :binary="true"
-                                                                          @change="onCertificatChange(certificat.id)" />
-                                                                <label :for="'certif_' + certificat.id" class="font-medium text-gray-700">
-                                                                    {{ certificat.nom_certificat }} 
-                                                                    <Tag :value="certificat.niveau_certificat" 
-                                                                         :style="getNiveauStyle(certificat.niveau_certificat)"
-                                                                         class="ml-2" />
+                                                                    v-model="form.certificats[certificat.id].obtenu"
+                                                                    :binary="true"
+                                                                    @change="onCertificatChange(certificat.id)" />
+                                                                <label :for="'certif_' + certificat.id"
+                                                                    class="font-medium text-gray-700">
+                                                                    {{ certificat.nom_certificat }}
+                                                                    <Tag :value="certificat.niveau_certificat"
+                                                                        :style="getNiveauStyle(certificat.niveau_certificat)"
+                                                                        class="ml-2" />
                                                                 </label>
                                                             </div>
                                                         </div>
-                                                        
+
                                                         <div class="mt-2 ml-6">
-                                                            <label :for="'date_certif_' + certificat.id" class="block text-xs text-gray-600 mb-1">
+                                                            <label :for="'date_certif_' + certificat.id"
+                                                                class="block text-xs text-gray-600 mb-1">
                                                                 Date d'obtention <span class="text-red-500">*</span>
                                                             </label>
                                                             <DatePicker :id="'date_certif_' + certificat.id"
-                                                                        v-model="form.certificats[certificat.id].date_obtention"
-                                                                        dateFormat="dd/mm/yy"
-                                                                        showIcon
-                                                                        class="w-full"
-                                                                        :disabled="!form.certificats[certificat.id].obtenu"
-                                                                        :class="{ 'p-invalid': dateErrors[certificat.id] && form.certificats[certificat.id].obtenu && !form.certificats[certificat.id].date_obtention }" />
-                                                            <small v-if="dateErrors[certificat.id] && form.certificats[certificat.id].obtenu && !form.certificats[certificat.id].date_obtention" 
-                                                                   class="text-red-500 text-xs">
+                                                                v-model="form.certificats[certificat.id].date_obtention"
+                                                                dateFormat="dd/mm/yy" showIcon class="w-full"
+                                                                :disabled="!form.certificats[certificat.id].obtenu"
+                                                                :class="{ 'p-invalid': dateErrors[certificat.id] && form.certificats[certificat.id].obtenu && !form.certificats[certificat.id].date_obtention }" />
+                                                            <small
+                                                                v-if="dateErrors[certificat.id] && form.certificats[certificat.id].obtenu && !form.certificats[certificat.id].date_obtention"
+                                                                class="text-red-500 text-xs">
                                                                 La date d'obtention est obligatoire
                                                             </small>
                                                         </div>
@@ -238,21 +254,20 @@
                                     <div v-else class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                         <div class="flex items-center gap-2">
                                             <i class="pi pi-info-circle text-yellow-600"></i>
-                                            <p class="text-sm text-yellow-700">Veuillez sélectionner un grade pour voir les formations disponibles.</p>
+                                            <p class="text-sm text-yellow-700">Veuillez sélectionner un grade pour voir
+                                                les formations
+                                                disponibles.</p>
                                         </div>
                                     </div>
 
                                     <!-- Boutons d'action -->
                                     <div class="flex justify-end gap-2 mt-6">
-                                        <Button label="Annuler" 
-                                                icon="pi pi-times"
-                                                class="p-button-outlined border-gray-300 text-gray-700 hover:bg-gray-100"
-                                                @click="cancel" />
-                                        <Button label="Enregistrer" 
-                                                icon="pi pi-save"
-                                                type="submit"
-                                                class="bg-sky-400 hover:bg-sky-500 border-sky-400 text-white"
-                                                :loading="saving" />
+                                        <Button label="Annuler" icon="pi pi-times"
+                                            class="p-button-outlined border-gray-300 text-gray-700 hover:bg-gray-100"
+                                            @click="cancel" />
+                                        <Button label="Enregistrer" icon="pi pi-save" type="submit"
+                                            class="bg-sky-400 hover:bg-sky-500 border-sky-400 text-white"
+                                            :loading="saving" />
                                     </div>
                                 </template>
                             </Card>
@@ -287,7 +302,7 @@ const props = defineProps({
     },
     certificats: {
         type: Array,
-        required: true
+        default: () => []  // ← RENDU OPTIONNEL
     }
 });
 
@@ -296,7 +311,6 @@ const saving = ref(false);
 const errors = ref({});
 const dateErrors = ref({});
 
-// Options pour le statut
 const statutOptions = [
     { label: 'Actif', value: 'actif' },
     { label: 'Retraité', value: 'retraité' },
@@ -306,28 +320,19 @@ const statutOptions = [
     { label: 'Stage', value: 'stage' }
 ];
 
-// Liste complète des formations d'officiers
 const formationsOfficiers = [
-    'APLI',
-    'CFCU', 
-    'CEM',
-    'Certificat État-major',
-    'Certificat d\'état-major',
-    'École d\'État-Major',
-    'ESM',
-    'Cours supérieur d\'état-major',
-    'École de guerre',
+    'APLI', 'CFCU', 'CEM', 'Certificat État-major',
+    'Certificat d\'état-major', 'École d\'État-Major', 'ESM',
+    'Cours supérieur d\'état-major', 'École de guerre',
     'Brevet Supérieur de Second Degré',
     'École de guerre / Brevet Supérieur de Second Degré',
-    'Cour d\'Application',
-    'Cour des Futurs Commandants d\'Unité',
+    'Cour d\'Application', 'Cour des Futurs Commandants d\'Unité',
     'Cour d\'état-major'
 ];
 
-// Types de grades pour le filtrage
 const officierTypes = ['officier général', 'officier supérieur', 'officier subalterne'];
 
-// Initialisation du formulaire
+// Formulaire avec les trois champs
 const form = reactive({
     matricule: '',
     grade_actuel: null,
@@ -337,6 +342,9 @@ const form = reactive({
     date_entree_service: null,
     date_derniere_promotion: null,
     specialite: '',
+    position_actuelle: '',
+    fonction_passee: '',
+    fonction_actuelle: '',
     statut: 'actif',
     a_permis_conduire: false,
     a_fait_justice: false,
@@ -344,77 +352,47 @@ const form = reactive({
     certificats: {}
 });
 
-// Initialiser les certificats dans le formulaire
-props.certificats.forEach(certificat => {
-    form.certificats[certificat.id] = {
-        obtenu: false,
-        date_obtention: null
-    };
-});
+// Initialisation des certificats (avec vérification)
+if (props.certificats && Array.isArray(props.certificats)) {
+    props.certificats.forEach(certificat => {
+        form.certificats[certificat.id] = {
+            obtenu: false,
+            date_obtention: null
+        };
+    });
+} else {
+    form.certificats = {};
+}
 
-// Vérifier si un certificat est une formation d'officier
+// Fonctions (inchangées)
 const estFormationOfficier = (certificat) => {
-    const nomCertificat = certificat.nom_certificat;
-    const niveauCertificat = certificat.niveau_certificat;
-    
-    // Vérification exacte
-    if (formationsOfficiers.includes(nomCertificat)) {
-        return true;
+    const nom = certificat.nom_certificat;
+    const niveau = certificat.niveau_certificat;
+    if (formationsOfficiers.includes(nom) || formationsOfficiers.includes(niveau)) return true;
+    for (const f of formationsOfficiers) {
+        if (nom && (nom.includes(f) || f.includes(nom))) return true;
+        if (niveau && (niveau.includes(f) || f.includes(niveau))) return true;
     }
-    if (formationsOfficiers.includes(niveauCertificat)) {
-        return true;
-    }
-    
-    // Vérification par inclusion
-    for (const formation of formationsOfficiers) {
-        if (nomCertificat && (nomCertificat.includes(formation) || formation.includes(nomCertificat))) {
-            return true;
-        }
-        if (niveauCertificat && (niveauCertificat.includes(formation) || formation.includes(niveauCertificat))) {
-            return true;
-        }
-    }
-    
     return false;
 };
 
-// Afficher la section des formations seulement si un grade est sélectionné
-const showFormationsSection = computed(() => {
-    return form.grade_actuel !== null && form.grade_actuel !== '';
-});
+const showFormationsSection = computed(() => form.grade_actuel !== null && form.grade_actuel !== '');
 
-// Filtrer les certificats selon le grade
 const filteredCertificats = computed(() => {
     if (!form.grade_actuel) return [];
-    
     const gradeInfo = props.grades.find(g => g.nom_grade === form.grade_actuel);
-    if (!gradeInfo) {
-        return [];
-    }
-    
-    // Vérifier si c'est un officier (insensible à la casse)
-    const estOfficier = officierTypes.includes(gradeInfo.type_grade?.toLowerCase());
-    
-    if (estOfficier) {
-        // Si c'est un officier, afficher toutes les formations
-        return props.certificats;
-    }
-    
-    // Sinon, afficher uniquement les formations qui ne sont PAS des formations d'officiers
+    if (!gradeInfo) return [];
+    if (officierTypes.includes(gradeInfo.type_grade?.toLowerCase())) return props.certificats;
     return props.certificats.filter(cert => !estFormationOfficier(cert));
 });
 
-// Watcher pour surveiller les changements de grade
 watch(() => form.grade_actuel, (newGrade, oldGrade) => {
-    if (newGrade && oldGrade && newGrade !== oldGrade) {
-        const oldGradeInfo = props.grades.find(g => g.nom_grade === oldGrade);
-        const newGradeInfo = props.grades.find(g => g.nom_grade === newGrade);
-        
-        if (oldGradeInfo && newGradeInfo) {
-            const wasOfficier = officierTypes.includes(oldGradeInfo.type_grade?.toLowerCase());
-            const isNowOfficier = officierTypes.includes(newGradeInfo.type_grade?.toLowerCase());
-            
-            // Si on passe d'officier à non-officier, décocher les formations d'officiers
+    if (newGrade && newGrade !== oldGrade) {
+        const oldInfo = props.grades.find(g => g.nom_grade === oldGrade);
+        const newInfo = props.grades.find(g => g.nom_grade === newGrade);
+        if (oldInfo && newInfo) {
+            const wasOfficier = officierTypes.includes(oldInfo.type_grade?.toLowerCase());
+            const isNowOfficier = officierTypes.includes(newInfo.type_grade?.toLowerCase());
             if (wasOfficier && !isNowOfficier) {
                 Object.keys(form.certificats).forEach(certifId => {
                     const cert = props.certificats.find(c => c.id == certifId);
@@ -429,24 +407,20 @@ watch(() => form.grade_actuel, (newGrade, oldGrade) => {
                 toast.add({
                     severity: 'info',
                     summary: 'Information',
-                    detail: 'Les formations d\'officiers ont été désélectionnées car le grade n\'est plus un grade d\'officier.',
+                    detail: 'Les formations d\'officiers ont été désélectionnées.',
                     life: 3000
                 });
             }
         }
     }
-});
+}, { immediate: true });
 
-// Watcher pour les certificats
 watch(() => form.certificats, (newVal) => {
     Object.keys(newVal).forEach(certifId => {
-        if (!newVal[certifId].obtenu) {
-            dateErrors.value[certifId] = false;
-        }
+        if (!newVal[certifId].obtenu) dateErrors.value[certifId] = false;
     });
 }, { deep: true });
 
-// Style pour les badges selon le niveau
 const getNiveauStyle = (niveau) => {
     const styles = {
         'CAT1': { background: '#7dd3fc', color: '#0369a1' },
@@ -460,36 +434,28 @@ const getNiveauStyle = (niveau) => {
     return styles[niveau] || { background: '#bae6fd', color: '#0369a1' };
 };
 
-// Gérer le changement d'un certificat
-const onCertificatChange = (certificatId) => {
-    if (!form.certificats[certificatId].obtenu) {
-        form.certificats[certificatId].date_obtention = null;
-        dateErrors.value[certificatId] = false;
+const onCertificatChange = (certifId) => {
+    if (!form.certificats[certifId].obtenu) {
+        form.certificats[certifId].date_obtention = null;
+        dateErrors.value[certifId] = false;
     } else {
-        if (!form.certificats[certificatId].date_obtention) {
-            dateErrors.value[certificatId] = true;
-        }
+        if (!form.certificats[certifId].date_obtention) dateErrors.value[certifId] = true;
     }
 };
 
-// Valider les dates avant soumission
 const validateDates = () => {
     let isValid = true;
     dateErrors.value = {};
-    
     Object.keys(form.certificats).forEach(certifId => {
         if (form.certificats[certifId].obtenu && !form.certificats[certifId].date_obtention) {
             dateErrors.value[certifId] = true;
             isValid = false;
         }
     });
-    
     return isValid;
 };
 
-// Soumission du formulaire
 const submitForm = () => {
-    // Valider les dates
     if (!validateDates()) {
         toast.add({
             severity: 'error',
@@ -499,25 +465,26 @@ const submitForm = () => {
         });
         return;
     }
-    
+
     saving.value = true;
     errors.value = {};
 
-    // Préparer les données pour l'envoi
     const formData = {
         ...form,
         date_naissance: form.date_naissance ? formatDateForServer(form.date_naissance) : null,
         date_entree_service: form.date_entree_service ? formatDateForServer(form.date_entree_service) : null,
         date_derniere_promotion: form.date_derniere_promotion ? formatDateForServer(form.date_derniere_promotion) : null,
+        position_actuelle: form.position_actuelle,
+        fonction_passee: form.fonction_passee,
+        fonction_actuelle: form.fonction_actuelle,
         certificats: {}
     };
 
-    // Formater les dates des certificats
     Object.keys(form.certificats).forEach(certifId => {
         if (form.certificats[certifId].obtenu) {
             formData.certificats[certifId] = {
                 obtenu: true,
-                date_obtention: form.certificats[certifId].date_obtention 
+                date_obtention: form.certificats[certifId].date_obtention
                     ? formatDateForServer(form.certificats[certifId].date_obtention)
                     : null
             };
@@ -538,24 +505,18 @@ const submitForm = () => {
         onError: (err) => {
             saving.value = false;
             errors.value = err;
-            
             toast.add({
                 severity: 'error',
                 summary: 'Erreur',
                 detail: 'Veuillez corriger les erreurs du formulaire',
                 life: 5000
             });
-            
-            // Faire défiler jusqu'à la première erreur
             const firstError = document.querySelector('.p-invalid');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
 };
 
-// Formater la date pour l'envoi au serveur (YYYY-MM-DD)
 const formatDateForServer = (date) => {
     if (!date) return null;
     const d = new Date(date);
@@ -565,7 +526,6 @@ const formatDateForServer = (date) => {
     return `${year}-${month}-${day}`;
 };
 
-// Annuler et retourner à la liste
 const cancel = () => {
     router.visit(route('militaires.index'));
 };
@@ -589,7 +549,7 @@ const cancel = () => {
     border-bottom: 1px solid #e5e7eb;
 }
 
-:deep(.p-inputtext), 
+:deep(.p-inputtext),
 :deep(.p-select),
 :deep(.p-datepicker) {
     width: 100%;
@@ -607,7 +567,6 @@ const cancel = () => {
     font-weight: 500;
 }
 
-/* Styles personnalisés */
 .text-sky-500 {
     color: #0ea5e9;
 }

@@ -10,33 +10,27 @@
             <div class="flex items-center justify-between p-4 border-b border-sky-500">
                 <!-- Logo toujours visible -->
                 <div class="flex items-center overflow-hidden">
-                    <img v-if="logoExists" 
-                         :src="logoUrl" 
-                         alt="DTTIA" 
-                         class="h-10 w-auto transition-all duration-300 shrink-0" />
+                    <img v-if="logoExists" :src="logoUrl" alt="DTTIA"
+                        class="h-10 w-auto transition-all duration-300 shrink-0" />
                     <!-- Titre visible uniquement quand menu ouvert OU sur mobile -->
-                    <h3 v-if="(isOpen || !isMobile) && !isMobile" 
+                    <h3 v-if="(isOpen || !isMobile) && !isMobile"
                         class="text-white font-bold text-lg ml-2 whitespace-nowrap" translate="no">
                         Suivi personnel
                     </h3>
-                    <h3 v-if="isMobile" 
-                        class="text-white font-bold text-lg ml-2 whitespace-nowrap" translate="no">
+                    <h3 v-if="isMobile" class="text-white font-bold text-lg ml-2 whitespace-nowrap" translate="no">
                         Suivi personnel
                     </h3>
                 </div>
-                
+
                 <!-- Bouton toggle (caché sur mobile) -->
-                <button v-if="!isMobile" 
-                        @click="toggleSidebar" 
-                        class="bg-sky-700 rounded-full p-1 text-white hover:bg-sky-800 transition-colors shrink-0 ml-2">
-                    <i :class="isOpen ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" 
-                       class="text-sm"></i>
+                <button v-if="!isMobile" @click="toggleSidebar"
+                    class="bg-sky-700 rounded-full p-1 text-white hover:bg-sky-800 transition-colors shrink-0 ml-2">
+                    <i :class="isOpen ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" class="text-sm"></i>
                 </button>
-                
+
                 <!-- Bouton fermeture mobile -->
-                <button v-if="isMobile" 
-                        @click="closeMobileMenu"
-                        class="bg-sky-700 rounded-full p-1 text-white hover:bg-sky-800 transition-colors shrink-0 ml-2">
+                <button v-if="isMobile" @click="closeMobileMenu"
+                    class="bg-sky-700 rounded-full p-1 text-white hover:bg-sky-800 transition-colors shrink-0 ml-2">
                     <i class="pi pi-times text-sm"></i>
                 </button>
             </div>
@@ -51,22 +45,22 @@
                                     <div class="flex items-center">
                                         <!-- Icône toujours visible -->
                                         <i :class="item.icon + ' text-xl w-5 shrink-0'"></i>
-                                        
+
                                         <!-- Texte : visible sur mobile ou quand menu ouvert -->
                                         <span v-if="isMobile || isOpen" class="ml-3 whitespace-nowrap">
                                             {{ item.name }}
                                         </span>
-                                        
+
                                         <!-- Tooltip au survol quand menu réduit (desktop uniquement) -->
-                                        <div v-if="!isMobile && !isOpen" 
-                                             class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                        <div v-if="!isMobile && !isOpen"
+                                            class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                             {{ item.name }}
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Badge alertes -->
-                                    <span v-if="item.name === 'Alertes' && alertesCount > 0 && (isMobile || isOpen)" 
-                                          class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 shrink-0">
+                                    <span v-if="item.name === 'Alertes' && alertesCount > 0 && (isMobile || isOpen)"
+                                        class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 shrink-0">
                                         {{ alertesCount > 99 ? '99+' : alertesCount }}
                                     </span>
                                 </div>
@@ -78,16 +72,16 @@
 
             <!-- Déconnexion -->
             <div class="border-t border-sky-500 p-4">
-                <button @click="logout" 
-                        class="w-full flex items-center text-white hover:bg-sky-700 rounded-lg px-3 py-2 transition-colors relative group">
+                <button @click="logout"
+                    class="w-full flex items-center text-white hover:bg-sky-700 rounded-lg px-3 py-2 transition-colors relative group">
                     <i class="pi pi-sign-out text-xl shrink-0"></i>
-                    
+
                     <!-- Texte : visible sur mobile ou quand menu ouvert -->
                     <span v-if="isMobile || isOpen" class="ml-3 whitespace-nowrap">Déconnexion</span>
-                    
+
                     <!-- Tooltip au survol quand menu réduit (desktop uniquement) -->
-                    <div v-if="!isMobile && !isOpen" 
-                         class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    <div v-if="!isMobile && !isOpen"
+                        class="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         Déconnexion
                     </div>
                 </button>
@@ -96,9 +90,8 @@
     </aside>
 
     <!-- Overlay pour mobile -->
-    <div v-if="isMobile && isOpen" 
-         @click="closeMobileMenu"
-         class="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"></div>
+    <div v-if="isMobile && isOpen" @click="closeMobileMenu"
+        class="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"></div>
 </template>
 
 <script setup>
@@ -145,6 +138,7 @@ const menuItems = [
     { name: 'Militaires', href: '/militaires', icon: 'pi pi-users' },
     { name: 'Alertes', href: '/alertes', icon: 'pi pi-bell' },
     { name: 'Éligibilités', href: '/eligibilites', icon: 'pi pi-check-circle' },
+    { name: 'Contrats', href: '/contrats', icon: 'pi pi-file' },
     { name: 'Grades', href: '/grades', icon: 'pi pi-star' },
     { name: 'Certificats', href: '/certificats', icon: 'pi pi-file-pdf' }
 ];

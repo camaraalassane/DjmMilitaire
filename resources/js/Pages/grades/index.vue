@@ -5,12 +5,6 @@
                 <h2 class="font-semibold text-xl text-white">
                     Liste des grades
                 </h2>
-                <div class="flex gap-2">
-                    <Button label="Nouveau grade" 
-                            icon="pi pi-plus"
-                            class="p-button-sm bg-sky-400 hover:bg-sky-500 border-sky-400 text-white"
-                            @click="createGrade" />
-                </div>
             </div>
         </template>
 
@@ -49,10 +43,11 @@
                     </Card>
                 </div>
 
-                <!-- Filtres avec recherche automatique -->
+                <!-- Filtres avec recherche automatique - version alignée -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-6">
                     <div class="p-4">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <!-- Champ recherche -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
                                 <span class="p-input-icon-left w-full">
@@ -63,6 +58,7 @@
                                               @input="onSearchInput" />
                                 </span>
                             </div>
+                            <!-- Filtre type -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Type de grade</label>
                                 <Select v-model="filters.type" 
@@ -74,12 +70,19 @@
                                         showClear
                                         @change="onFilterChange" />
                             </div>
-                            <div>
-                                <div class="h-7 mb-1"></div>
-                                <Button label="Réinitialiser" 
-                                        icon="pi pi-times"
-                                        class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white w-full"
-                                        @click="resetFilters" />
+                            <!-- Boutons : Réinitialiser + Nouveau grade, alignés à droite -->
+                            <div class="md:col-span-2">
+                                <div class="h-7 mb-1 md:invisible"></div> <!-- espace réservé pour l'alignement vertical -->
+                                <div class="flex justify-end gap-2">
+                                    <Button label="Réinitialiser" 
+                                            icon="pi pi-times"
+                                            class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white"
+                                            @click="resetFilters" />
+                                    <Button label="Nouveau grade" 
+                                            icon="pi pi-plus"
+                                            class="p-button-sm bg-sky-400 hover:bg-sky-500 border-sky-400 text-white"
+                                            @click="createGrade" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -99,7 +102,6 @@
                                    @page="onPageChange"
                                    class="p-datatable-sm">
                             
-                            <!-- Code -->
                             <Column field="code_grade" header="Code" style="width: 100px">
                                 <template #body="slotProps">
                                     <Tag :value="slotProps.data.code_grade" 
@@ -107,7 +109,6 @@
                                 </template>
                             </Column>
 
-                            <!-- Grade (cliquable) -->
                             <Column field="nom_grade" header="Grade">
                                 <template #body="slotProps">
                                     <Button :label="slotProps.data.nom_grade"
@@ -116,7 +117,6 @@
                                 </template>
                             </Column>
 
-                            <!-- Type -->
                             <Column field="type_grade" header="Type" style="width: 150px">
                                 <template #body="slotProps">
                                     <Tag :value="slotProps.data.type_grade" 
@@ -124,7 +124,6 @@
                                 </template>
                             </Column>
 
-                            <!-- Ordre -->
                             <Column field="ordre" header="Ordre" style="width: 80px">
                                 <template #body="slotProps">
                                     <Badge :value="slotProps.data.ordre" 
@@ -132,7 +131,6 @@
                                 </template>
                             </Column>
 
-                            <!-- Effectif actif -->
                             <Column header="Effectif actif" style="width: 120px">
                                 <template #body="slotProps">
                                     <Tag :value="slotProps.data.effectif_actif + ' militaires'" 
@@ -140,7 +138,6 @@
                                 </template>
                             </Column>
 
-                            <!-- Actions -->
                             <Column header="Actions" style="width: 100px">
                                 <template #body="slotProps">
                                     <Button icon="pi pi-eye" 
@@ -158,7 +155,6 @@
                             </template>
                         </DataTable>
 
-                        <!-- Simple information de pagination -->
                         <div class="text-center sm:text-left text-sm text-gray-600 mt-4">
                             Affichage de {{ grades.from }} à {{ grades.to }} sur {{ grades.total }} grades
                         </div>
@@ -167,13 +163,79 @@
             </div>
         </div>
 
+        <!-- Dialogue de création -->
+        <Dialog v-model:visible="showCreateDialog" 
+                header="Nouveau grade" 
+                :modal="true"
+                :style="{ width: '550px' }"
+                class="p-fluid">
+            <div class="space-y-4">
+                <div class="field">
+                    <label for="code_grade" class="block text-sm font-medium text-gray-700 mb-1">
+                        Code grade * <span class="text-xs text-gray-500">(unique, max 20)</span>
+                    </label>
+                    <InputText id="code_grade" v-model="form.code_grade" 
+                               :class="{ 'p-invalid': form.errors.code_grade }"
+                               class="w-full" />
+                    <small v-if="form.errors.code_grade" class="text-red-600">{{ form.errors.code_grade }}</small>
+                </div>
+
+                <div class="field">
+                    <label for="nom_grade" class="block text-sm font-medium text-gray-700 mb-1">Nom du grade *</label>
+                    <InputText id="nom_grade" v-model="form.nom_grade" 
+                               :class="{ 'p-invalid': form.errors.nom_grade }"
+                               class="w-full" />
+                    <small v-if="form.errors.nom_grade" class="text-red-600">{{ form.errors.nom_grade }}</small>
+                </div>
+
+                <div class="field">
+                    <label for="type_grade" class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                    <Select id="type_grade" v-model="form.type_grade" 
+                            :options="typesGrades" 
+                            optionLabel="label" 
+                            optionValue="value"
+                            placeholder="Choisir un type"
+                            :class="{ 'p-invalid': form.errors.type_grade }"
+                            class="w-full" />
+                    <small v-if="form.errors.type_grade" class="text-red-600">{{ form.errors.type_grade }}</small>
+                </div>
+
+                <div class="field">
+                    <label for="ordre" class="block text-sm font-medium text-gray-700 mb-1">
+                        Ordre * <span class="text-xs text-gray-500">(entier unique, plus petit = plus haut grade)</span>
+                    </label>
+                    <InputNumber id="ordre" v-model="form.ordre" 
+                                 :min="0" :step="1"
+                                 :class="{ 'p-invalid': form.errors.ordre }"
+                                 class="w-full" />
+                    <small v-if="form.errors.ordre" class="text-red-600">{{ form.errors.ordre }}</small>
+                </div>
+
+                <div class="field">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <Textarea id="description" v-model="form.description" 
+                              rows="3" 
+                              class="w-full" />
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Annuler" icon="pi pi-times" 
+                        class="p-button-text p-button-secondary"
+                        @click="closeCreateDialog" />
+                <Button label="Créer" icon="pi pi-check" 
+                        :loading="form.processing"
+                        @click="submitCreate" />
+            </template>
+        </Dialog>
+
         <Toast position="top-right" />
     </AuthenticatedLayout>
 </template>
 
 <script setup>
 import { ref, reactive, watch } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
@@ -184,6 +246,9 @@ import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
+import Dialog from 'primevue/dialog';
+import InputNumber from 'primevue/inputnumber';
+import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
 import debounce from 'lodash/debounce';
 
@@ -208,14 +273,21 @@ const props = defineProps({
 
 const toast = useToast();
 const loading = ref(false);
+const showCreateDialog = ref(false);
 
-// État des filtres
+const form = useForm({
+    code_grade: '',
+    nom_grade: '',
+    type_grade: null,
+    ordre: null,
+    description: ''
+});
+
 const filters = reactive({
     search: props.filters?.search || '',
     type: props.filters?.type || null
 });
 
-// Recherche automatique avec debounce
 const debouncedSearch = debounce(() => {
     loadGrades(1);
 }, 500);
@@ -228,7 +300,6 @@ const onFilterChange = () => {
     loadGrades(1);
 };
 
-// Watcher pour surveiller les changements de recherche
 watch(() => filters.search, () => {
     debouncedSearch();
 });
@@ -237,7 +308,6 @@ watch(() => filters.type, () => {
     loadGrades(1);
 });
 
-// Style pour les badges selon le type de grade
 const getTypeStyle = (type) => {
     const styles = {
         'Officier général': { background: '#fecaca', color: '#991b1b' },
@@ -250,10 +320,8 @@ const getTypeStyle = (type) => {
     return styles[type] || { background: '#bae6fd', color: '#0369a1' };
 };
 
-// Charger les grades
 const loadGrades = (page = 1) => {
     loading.value = true;
-    
     router.get(route('grades.index'), {
         page,
         search: filters.search,
@@ -276,13 +344,11 @@ const loadGrades = (page = 1) => {
     });
 };
 
-// Réinitialiser les filtres
 const resetFilters = () => {
     filters.search = '';
     filters.type = null;
 };
 
-// Changement de page
 const onPageChange = (event) => {
     changePage(event.page + 1);
 };
@@ -293,17 +359,41 @@ const changePage = (page) => {
     }
 };
 
-// Actions
 const viewGrade = (id) => {
     router.visit(route('grades.show', id));
 };
 
 const createGrade = () => {
-    toast.add({
-        severity: 'info',
-        summary: 'Information',
-        detail: 'Fonctionnalité de création à venir',
-        life: 3000
+    form.reset();
+    form.clearErrors();
+    showCreateDialog.value = true;
+};
+
+const closeCreateDialog = () => {
+    showCreateDialog.value = false;
+    form.reset();
+};
+
+const submitCreate = () => {
+    form.post(route('grades.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showCreateDialog.value = false;
+            toast.add({
+                severity: 'success',
+                summary: 'Succès',
+                detail: 'Grade créé avec succès',
+                life: 3000
+            });
+        },
+        onError: () => {
+            toast.add({
+                severity: 'error',
+                summary: 'Erreur de validation',
+                detail: 'Veuillez corriger les champs en rouge',
+                life: 5000
+            });
+        }
     });
 };
 </script>
@@ -352,7 +442,6 @@ const createGrade = () => {
     border-radius: 0.375rem;
 }
 
-/* Styles personnalisés */
 .bg-sky-400 {
     background-color: #38bdf8;
 }
@@ -391,5 +480,33 @@ const createGrade = () => {
 
 .text-white {
     color: white;
+}
+
+.flex {
+    display: flex;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.justify-end {
+    justify-content: flex-end;
+}
+
+.md\:col-span-2 {
+    grid-column: span 2;
+}
+
+.md\:invisible {
+    visibility: hidden;
+}
+
+.h-7 {
+    height: 1.75rem;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem;
 }
 </style>

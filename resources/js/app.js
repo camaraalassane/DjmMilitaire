@@ -9,10 +9,11 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 // Import PrimeVue
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
+import Tooltip from 'primevue/tooltip'; // ✅ Ajout pour v-tooltip
 import Aura from '@primeuix/themes/aura';
 import 'primeicons/primeicons.css';
 
-const appName =  'Suivi personnel';
+const appName = 'Suivi personnel';
 
 // Créer une directive click-outside personnalisée
 const ClickOutside = {
@@ -49,7 +50,10 @@ createInertiaApp({
             }
         });
         app.use(ToastService);
-        
+
+        // ✅ Enregistrer la directive tooltip de PrimeVue
+        app.directive('tooltip', Tooltip);
+
         // Enregistrer la directive click-outside personnalisée
         app.directive('click-outside', ClickOutside);
 

@@ -127,6 +127,36 @@
                                         </div>
                                     </div>
 
+                                    <!-- NOUVEAUX CHAMPS : Position, Fonction passée, Fonction actuelle -->
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                        <div class="field">
+                                            <label for="position_actuelle" class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-map-marker text-sky-500 mr-1"></i> Position actuelle
+                                            </label>
+                                            <InputText id="position_actuelle" 
+                                                      v-model="form.position_actuelle" 
+                                                      class="w-full" />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="fonction_passee" class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-history text-sky-500 mr-1"></i> Fonction passée
+                                            </label>
+                                            <InputText id="fonction_passee" 
+                                                      v-model="form.fonction_passee" 
+                                                      class="w-full" />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="fonction_actuelle" class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-briefcase text-sky-500 mr-1"></i> Fonction actuelle
+                                            </label>
+                                            <InputText id="fonction_actuelle" 
+                                                      v-model="form.fonction_actuelle" 
+                                                      class="w-full" />
+                                        </div>
+                                    </div>
+
                                     <!-- Statut et Permis -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <div class="field">
@@ -151,7 +181,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Certificats et formations - SECTION CONDITIONNELLE -->
+                                    <!-- Certificats et formations -->
                                     <Card v-if="showFormationsSection" class="mt-6">
                                         <template #title>
                                             <div class="flex items-center gap-2">
@@ -214,7 +244,6 @@
                                         </template>
                                     </Card>
 
-                                    <!-- Message si aucun grade sélectionné -->
                                     <div v-else class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                         <div class="flex items-center gap-2">
                                             <i class="pi pi-info-circle text-yellow-600"></i>
@@ -283,9 +312,8 @@ const toast = useToast();
 const saving = ref(false);
 const errors = ref({});
 const dateErrors = ref({});
-const forceRerender = ref(0); // Pour forcer le re-rendu
+const forceRerender = ref(0);
 
-// Options pour le statut
 const statutOptions = [
     { label: 'Actif', value: 'actif' },
     { label: 'Retraité', value: 'retraité' },
@@ -295,7 +323,6 @@ const statutOptions = [
     { label: 'Stage', value: 'stage' }
 ];
 
-// Liste complète des formations d'officiers
 const formationsOfficiers = [
     'APLI',
     'CFCU', 
@@ -313,10 +340,9 @@ const formationsOfficiers = [
     'Cour d\'état-major'
 ];
 
-// Types de grades pour le filtrage
 const officierTypes = ['officier général', 'officier supérieur', 'officier subalterne'];
 
-// INITIALISATION DU FORMULAIRE
+// FORMULAIRE - AJOUT DES TROIS CHAMPS
 const form = reactive({
     id: props.militaire.id,
     matricule: props.militaire.matricule || '',
@@ -327,6 +353,10 @@ const form = reactive({
     date_entree_service: props.militaire.date_entree_service ? new Date(props.militaire.date_entree_service) : null,
     date_derniere_promotion: props.militaire.date_derniere_promotion ? new Date(props.militaire.date_derniere_promotion) : null,
     specialite: props.militaire.specialite || '',
+    // NOUVEAUX CHAMPS
+    position_actuelle: props.militaire.position_actuelle || '',
+    fonction_passee: props.militaire.fonction_passee || '',
+    fonction_actuelle: props.militaire.fonction_actuelle || '',
     statut: props.militaire.statut || 'actif',
     a_permis_conduire: props.militaire.a_permis_conduire || false,
     a_fait_justice: props.militaire.a_fait_justice || false,
@@ -334,7 +364,7 @@ const form = reactive({
     certificats: {}
 });
 
-// Initialiser les certificats dans le formulaire
+// Initialisation des certificats
 props.certificats.forEach(certificat => {
     const certifExistant = props.certificats_du_militaire[certificat.id];
     form.certificats[certificat.id] = {
@@ -343,93 +373,36 @@ props.certificats.forEach(certificat => {
     };
 });
 
-// Vérifier si un certificat est une formation d'officier
+// Fonctions de filtrage et watchers (inchangés)
 const estFormationOfficier = (certificat) => {
     const nomCertificat = certificat.nom_certificat;
     const niveauCertificat = certificat.niveau_certificat;
-    
-    // Vérification exacte
-    if (formationsOfficiers.includes(nomCertificat)) {
-        console.log(`Formation officier détectée (nom): ${nomCertificat}`);
-        return true;
-    }
-    if (formationsOfficiers.includes(niveauCertificat)) {
-        console.log(`Formation officier détectée (niveau): ${niveauCertificat}`);
-        return true;
-    }
-    
-    // Vérification par inclusion
+    if (formationsOfficiers.includes(nomCertificat) || formationsOfficiers.includes(niveauCertificat)) return true;
     for (const formation of formationsOfficiers) {
-        if (nomCertificat && (nomCertificat.includes(formation) || formation.includes(nomCertificat))) {
-            console.log(`Formation officier détectée (inclusion): ${nomCertificat} contient ${formation}`);
-            return true;
-        }
-        if (niveauCertificat && (niveauCertificat.includes(formation) || formation.includes(niveauCertificat))) {
-            console.log(`Formation officier détectée (inclusion niveau): ${niveauCertificat} contient ${formation}`);
-            return true;
-        }
+        if (nomCertificat && (nomCertificat.includes(formation) || formation.includes(nomCertificat))) return true;
+        if (niveauCertificat && (niveauCertificat.includes(formation) || formation.includes(niveauCertificat))) return true;
     }
-    
     return false;
 };
 
-// Afficher la section des formations seulement si un grade est sélectionné
-const showFormationsSection = computed(() => {
-    return form.grade_actuel !== null && form.grade_actuel !== '';
-});
+const showFormationsSection = computed(() => form.grade_actuel !== null && form.grade_actuel !== '');
 
-// Filtrer les certificats selon le grade
 const filteredCertificats = computed(() => {
     if (!form.grade_actuel) return [];
-    
     const gradeInfo = props.grades.find(g => g.nom_grade === form.grade_actuel);
-    if (!gradeInfo) {
-        console.log('Grade non trouvé:', form.grade_actuel);
-        return [];
-    }
-    
-    console.log('Grade trouvé:', gradeInfo);
-    console.log('Type de grade:', gradeInfo.type_grade);
-    
-    if (officierTypes.includes(gradeInfo.type_grade)) {
-        return props.certificats;
-    }
-    
+    if (!gradeInfo) return [];
+    if (officierTypes.includes(gradeInfo.type_grade)) return props.certificats;
     return props.certificats.filter(cert => !estFormationOfficier(cert));
 });
 
-// Watcher pour surveiller les changements de grade
 watch(() => form.grade_actuel, (newGrade, oldGrade) => {
-    console.log('=== CHANGEMENT DE GRADE DÉTECTÉ ===');
-    console.log('Ancien grade:', oldGrade);
-    console.log('Nouveau grade:', newGrade);
-    
-    if (newGrade) {
-        const gradeInfo = props.grades.find(g => g.nom_grade === newGrade);
-        if (gradeInfo) {
-            console.log('Type de grade:', gradeInfo.type_grade);
-            console.log('Est officier:', officierTypes.includes(gradeInfo.type_grade));
-            console.log('Nombre de formations disponibles:', filteredCertificats.value.length);
-            
-            // Forcer le re-rendu du composant
-            forceRerender.value++;
-        }
-    }
-    
-    if (newGrade && oldGrade && newGrade !== oldGrade) {
+    if (newGrade && newGrade !== oldGrade) {
         const oldGradeInfo = props.grades.find(g => g.nom_grade === oldGrade);
         const newGradeInfo = props.grades.find(g => g.nom_grade === newGrade);
-        
         if (oldGradeInfo && newGradeInfo) {
             const wasOfficier = officierTypes.includes(oldGradeInfo.type_grade);
             const isNowOfficier = officierTypes.includes(newGradeInfo.type_grade);
-            
-            console.log('Transition:', wasOfficier ? 'Officier' : 'Non-officier', '->', isNowOfficier ? 'Officier' : 'Non-officier');
-            
-            // Si on passe d'officier à non-officier, décocher les formations d'officiers
             if (wasOfficier && !isNowOfficier) {
-                console.log('Désélection des formations d\'officiers...');
-                let count = 0;
                 Object.keys(form.certificats).forEach(certifId => {
                     const cert = props.certificats.find(c => c.id == certifId);
                     if (cert && estFormationOfficier(cert)) {
@@ -437,33 +410,20 @@ watch(() => form.grade_actuel, (newGrade, oldGrade) => {
                             form.certificats[certifId].obtenu = false;
                             form.certificats[certifId].date_obtention = null;
                             dateErrors.value[certifId] = false;
-                            count++;
                         }
                     }
-                });
-                console.log(`${count} formation(s) désélectionnée(s)`);
-                
-                toast.add({
-                    severity: 'info',
-                    summary: 'Information',
-                    detail: `${count} formation(s) d'officiers ont été désélectionnées.`,
-                    life: 3000
                 });
             }
         }
     }
-}, { immediate: true }); // immediate: true pour exécuter au chargement
+}, { immediate: true });
 
-// Watcher pour les certificats
 watch(() => form.certificats, (newVal) => {
     Object.keys(newVal).forEach(certifId => {
-        if (!newVal[certifId].obtenu) {
-            dateErrors.value[certifId] = false;
-        }
+        if (!newVal[certifId].obtenu) dateErrors.value[certifId] = false;
     });
 }, { deep: true });
 
-// Style pour les badges selon le niveau
 const getNiveauStyle = (niveau) => {
     const styles = {
         'CAT1': { background: '#7dd3fc', color: '#0369a1' },
@@ -477,34 +437,28 @@ const getNiveauStyle = (niveau) => {
     return styles[niveau] || { background: '#bae6fd', color: '#0369a1' };
 };
 
-// Gérer le changement d'un certificat
 const onCertificatChange = (certificatId) => {
     if (!form.certificats[certificatId].obtenu) {
         form.certificats[certificatId].date_obtention = null;
         dateErrors.value[certificatId] = false;
     } else {
-        if (!form.certificats[certificatId].date_obtention) {
-            dateErrors.value[certificatId] = true;
-        }
+        if (!form.certificats[certificatId].date_obtention) dateErrors.value[certificatId] = true;
     }
 };
 
-// Valider les dates avant soumission
 const validateDates = () => {
     let isValid = true;
     dateErrors.value = {};
-    
     Object.keys(form.certificats).forEach(certifId => {
         if (form.certificats[certifId].obtenu && !form.certificats[certifId].date_obtention) {
             dateErrors.value[certifId] = true;
             isValid = false;
         }
     });
-    
     return isValid;
 };
 
-// Soumission du formulaire
+// SOUMISSION - AJOUT DES NOUVEAUX CHAMPS DANS LES DONNÉES ENVOYÉES
 const submitForm = () => {
     if (!validateDates()) {
         toast.add({
@@ -524,6 +478,10 @@ const submitForm = () => {
         date_naissance: form.date_naissance ? formatDateForServer(form.date_naissance) : null,
         date_entree_service: form.date_entree_service ? formatDateForServer(form.date_entree_service) : null,
         date_derniere_promotion: form.date_derniere_promotion ? formatDateForServer(form.date_derniere_promotion) : null,
+        // Inclure les trois champs (ils sont déjà dans form, on les passe)
+        position_actuelle: form.position_actuelle,
+        fonction_passee: form.fonction_passee,
+        fonction_actuelle: form.fonction_actuelle,
         certificats: {}
     };
 
@@ -552,23 +510,18 @@ const submitForm = () => {
         onError: (err) => {
             saving.value = false;
             errors.value = err;
-            
             toast.add({
                 severity: 'error',
                 summary: 'Erreur',
                 detail: 'Veuillez corriger les erreurs du formulaire',
                 life: 5000
             });
-            
             const firstError = document.querySelector('.p-invalid');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
 };
 
-// Formater la date pour l'envoi au serveur (YYYY-MM-DD)
 const formatDateForServer = (date) => {
     if (!date) return null;
     const d = new Date(date);
@@ -578,96 +531,74 @@ const formatDateForServer = (date) => {
     return `${year}-${month}-${day}`;
 };
 
-// Annuler et retourner à la liste
 const cancel = () => {
     router.visit(route('militaires.index'));
 };
 
-// Initialisation au montage
 onMounted(() => {
-    console.log('=== COMPOSANT MONTÉ ===');
-    console.log('Grade initial:', form.grade_actuel);
-    console.log('Nombre de certificats:', props.certificats.length);
-    
     Object.keys(form.certificats).forEach(certifId => {
-        if (!form.certificats[certifId].obtenu) {
-            form.certificats[certifId].date_obtention = null;
-        } else if (form.certificats[certifId].obtenu && !form.certificats[certifId].date_obtention) {
-            dateErrors.value[certifId] = true;
-        }
+        if (!form.certificats[certifId].obtenu) form.certificats[certifId].date_obtention = null;
+        else if (form.certificats[certifId].obtenu && !form.certificats[certifId].date_obtention) dateErrors.value[certifId] = true;
     });
 });
 </script>
 
 <style scoped>
+/* Styles inchangés */
 .field {
     margin-bottom: 1rem;
 }
-
 :deep(.p-card) {
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-
 :deep(.p-card .p-card-title) {
     font-size: 1.25rem;
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid #e5e7eb;
 }
-
 :deep(.p-inputtext), 
 :deep(.p-select),
 :deep(.p-datepicker) {
     width: 100%;
     border-radius: 0.5rem;
 }
-
 :deep(.p-invalid) {
     border-color: #f87171;
 }
-
 :deep(.p-tag) {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
     border-radius: 0.375rem;
     font-weight: 500;
 }
-
 :deep(.p-checkbox) {
     margin-top: 0.25rem;
 }
-
 .text-sky-500 {
     color: #0ea5e9;
 }
-
 .text-sky-600 {
     color: #0284c7;
 }
-
 .bg-sky-400 {
     background-color: #38bdf8;
 }
-
 .hover\:bg-sky-500:hover {
     background-color: #0ea5e9;
 }
-
 .border-sky-400 {
     border-color: #38bdf8;
 }
-
 .text-white {
     color: white;
 }
-
 .border {
     transition: all 0.2s ease;
     border-color: #e5e7eb;
 }
-
 .border:hover {
     border-color: #7dd3fc;
 }

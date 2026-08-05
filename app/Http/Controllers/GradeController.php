@@ -141,4 +141,23 @@ class GradeController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Enregistrer un nouveau grade.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'code_grade' => 'required|string|max:20|unique:grades,code_grade',
+            'nom_grade'  => 'required|string|max:100',
+            'type_grade' => 'required|string|max:50',
+            'ordre'      => 'required|integer|min:0|unique:grades,ordre',
+            'description'=> 'nullable|string',
+        ]);
+
+        $grade = Grade::create($validated);
+
+        return redirect()->route('grades.index')
+                         ->with('success', 'Grade créé avec succès.');
+    }
 }
