@@ -10,7 +10,7 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6">
-                        <form @submit.prevent="submitForm">
+                        <form @submit.prevent="submitForm" enctype="multipart/form-data">
                             <Card>
                                 <template #title>
                                     <div class="flex items-center gap-2">
@@ -20,6 +20,19 @@
                                 </template>
 
                                 <template #content>
+                                    <!-- Bannière de résumé d'erreurs de validation -->
+                                    <div v-if="errors && Object.keys(errors).length > 0" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm">
+                                        <div class="flex items-center gap-2 mb-2 text-red-700 font-semibold">
+                                            <i class="pi pi-exclamation-triangle text-lg"></i>
+                                            <span>Erreurs détectées lors de la validation du formulaire :</span>
+                                        </div>
+                                        <ul class="list-disc list-inside text-sm text-red-600 space-y-1">
+                                            <li v-for="(err, field) in errors" :key="field">
+                                                <strong class="capitalize">{{ field }}</strong> : {{ Array.isArray(err) ? err.join(', ') : err }}
+                                            </li>
+                                        </ul>
+                                    </div>
+
                                     <!-- Informations générales -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <!-- Matricule -->
@@ -30,7 +43,7 @@
                                             <InputText id="matricule" v-model="form.matricule" class="w-full"
                                                 :class="{ 'p-invalid': errors.matricule }" />
                                             <small v-if="errors.matricule" class="text-red-500">{{ errors.matricule
-                                                }}</small>
+                                            }}</small>
                                         </div>
 
                                         <!-- Grade actuel -->
@@ -117,7 +130,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- NOUVEAUX CHAMPS : Position, Fonction passée, Fonction actuelle -->
+                                    <!-- Position, Fonction passée, Fonction actuelle -->
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                         <div class="field">
                                             <label for="position_actuelle"
@@ -147,46 +160,103 @@
                                         </div>
                                     </div>
 
-                                    <!-- Statut et Permis -->
+                                    <!-- STATUT ET TÉLÉPHONE sur la même ligne -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <div class="field">
-                                            <label for="statut"
-                                                class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                                            <label for="statut" class="block text-sm font-medium text-gray-700 mb-2">
+                                                Statut <span class="text-red-500">*</span>
+                                            </label>
                                             <Select v-model="form.statut" :options="statutOptions" optionLabel="label"
                                                 optionValue="value" placeholder="Sélectionner un statut" class="w-full"
                                                 :class="{ 'p-invalid': errors.statut }" />
                                             <small v-if="errors.statut" class="text-red-500">{{ errors.statut }}</small>
                                         </div>
 
-                                        <div class="flex items-center mt-6">
-                                            <Checkbox id="a_permis_conduire" v-model="form.a_permis_conduire"
-                                                :binary="true" />
-                                            <label for="a_permis_conduire"
-                                                class="ml-2 text-sm font-medium text-gray-700">
-                                                Permis de conduire obtenu
+                                        <div class="field">
+                                            <label for="telephone" class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-phone text-sky-500 mr-1"></i> Téléphone
                                             </label>
+                                            <InputText id="telephone" v-model="form.telephone" class="w-full"
+                                                placeholder="Ex: +225 05 08 XX XX XX"
+                                                :class="{ 'p-invalid': errors.telephone }" />
+                                            <small v-if="errors.telephone" class="text-red-500">{{ errors.telephone
+                                            }}</small>
                                         </div>
                                     </div>
 
-                                    <!-- Problèmes judiciaire et disciplinaire -->
+                                    <!-- SEXE & GROUPE SANGUIN sur la même ligne -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div class="flex items-center gap-2">
+                                        <div class="field">
+                                            <label for="sexe" class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-user text-sky-500 mr-1"></i> Sexe
+                                            </label>
+                                            <Select v-model="form.sexe" :options="sexeOptions" optionLabel="label"
+                                                optionValue="value" placeholder="Sélectionner" class="w-full"
+                                                showClear />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="groupe_sanguin"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-heart text-red-500 mr-1"></i> Groupe sanguin
+                                            </label>
+                                            <Select v-model="form.groupe_sanguin" :options="groupeSanguinOptions"
+                                                optionLabel="label" optionValue="value" placeholder="Sélectionner"
+                                                class="w-full" showClear />
+                                        </div>
+                                    </div>
+
+                                    <!-- PERSONNE À CONTACTER & TÉLÉPHONE DE LA PERSONNE sur la même ligne -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                        <div class="field">
+                                            <label for="personne_a_contacter"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-users text-sky-500 mr-1"></i> Personne à contacter
+                                            </label>
+                                            <InputText id="personne_a_contacter" v-model="form.personne_a_contacter"
+                                                class="w-full" placeholder="Nom et prénom" />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="telephone_personne_contacter"
+                                                class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="pi pi-phone text-sky-500 mr-1"></i> Téléphone de la personne
+                                            </label>
+                                            <InputText id="telephone_personne_contacter"
+                                                v-model="form.telephone_personne_contacter" class="w-full"
+                                                placeholder="Ex: +225 05 08 XX XX XX" />
+                                        </div>
+                                    </div>
+
+                                    <!-- PERMIS, JUSTICE, DISCIPLINE sur la même ligne -->
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                        <div class="flex items-center gap-2 p-2 border rounded-lg bg-gray-50">
+                                            <Checkbox id="a_permis_conduire" v-model="form.a_permis_conduire"
+                                                :binary="true" />
+                                            <label for="a_permis_conduire" class="text-sm font-medium text-gray-700">
+                                                <i class="pi pi-car text-sky-500 mr-1"></i> Permis de conduire
+                                            </label>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 p-2 border rounded-lg bg-gray-50">
                                             <Checkbox id="a_fait_justice" v-model="form.a_fait_justice"
                                                 :binary="true" />
                                             <label for="a_fait_justice" class="text-sm font-medium text-gray-700">
-                                                Judiciaire
+                                                <i class="pi pi-gavel text-amber-500 mr-1"></i> A fait justice
                                             </label>
                                         </div>
-                                        <div class="flex items-center gap-2">
+
+                                        <div class="flex items-center gap-2 p-2 border rounded-lg bg-gray-50">
                                             <Checkbox id="a_fait_discipline" v-model="form.a_fait_discipline"
                                                 :binary="true" />
                                             <label for="a_fait_discipline" class="text-sm font-medium text-gray-700">
-                                                Punis
+                                                <i class="pi pi-exclamation-triangle text-red-500 mr-1"></i> A fait
+                                                discipline
                                             </label>
                                         </div>
                                     </div>
 
-                                    <!-- Certificats et formations - SECTION CONDITIONNELLE -->
+                                    <!-- Certificats et formations -->
                                     <Card v-if="showFormationsSection" class="mt-6">
                                         <template #title>
                                             <div class="flex items-center gap-2">
@@ -203,46 +273,72 @@
                                             </div>
 
                                             <div v-else>
-                                                <div class="mb-4">
-                                                    <h4 class="text-sm font-medium text-gray-700 mb-2">
-                                                        Formations disponibles pour ce grade :
-                                                    </h4>
-                                                </div>
-
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div v-for="certificat in filteredCertificats" :key="certificat.id"
                                                         class="border rounded-lg p-3 hover:border-sky-300 transition-all">
-                                                        <div class="flex items-start justify-between">
-                                                            <div class="flex items-start gap-2">
-                                                                <Checkbox :id="'certif_' + certificat.id"
-                                                                    v-model="form.certificats[certificat.id].obtenu"
-                                                                    :binary="true"
-                                                                    @change="onCertificatChange(certificat.id)" />
-                                                                <label :for="'certif_' + certificat.id"
-                                                                    class="font-medium text-gray-700">
-                                                                    {{ certificat.nom_certificat }}
-                                                                    <Tag :value="certificat.niveau_certificat"
-                                                                        :style="getNiveauStyle(certificat.niveau_certificat)"
-                                                                        class="ml-2" />
-                                                                </label>
-                                                            </div>
+
+                                                        <div class="flex items-start gap-2">
+                                                            <Checkbox :id="'certif_' + certificat.id"
+                                                                v-model="form.certificats[certificat.id].obtenu"
+                                                                :binary="true"
+                                                                @change="onCertificatChange(certificat.id)" />
+                                                            <label :for="'certif_' + certificat.id"
+                                                                class="font-medium text-gray-700 text-sm">
+                                                                {{ certificat.nom_certificat }}
+                                                                <Tag :value="certificat.niveau_certificat"
+                                                                    :style="getNiveauStyle(certificat.niveau_certificat)"
+                                                                    class="ml-1 text-xs" />
+                                                            </label>
                                                         </div>
 
-                                                        <div class="mt-2 ml-6">
+                                                        <div class="mt-2">
                                                             <label :for="'date_certif_' + certificat.id"
                                                                 class="block text-xs text-gray-600 mb-1">
-                                                                Date d'obtention <span class="text-red-500">*</span>
+                                                                Date d'obtention <span
+                                                                    v-if="form.certificats[certificat.id].obtenu"
+                                                                    class="text-red-500">*</span>
                                                             </label>
                                                             <DatePicker :id="'date_certif_' + certificat.id"
                                                                 v-model="form.certificats[certificat.id].date_obtention"
                                                                 dateFormat="dd/mm/yy" showIcon class="w-full"
+                                                                size="small"
                                                                 :disabled="!form.certificats[certificat.id].obtenu"
                                                                 :class="{ 'p-invalid': dateErrors[certificat.id] && form.certificats[certificat.id].obtenu && !form.certificats[certificat.id].date_obtention }" />
                                                             <small
                                                                 v-if="dateErrors[certificat.id] && form.certificats[certificat.id].obtenu && !form.certificats[certificat.id].date_obtention"
                                                                 class="text-red-500 text-xs">
-                                                                La date d'obtention est obligatoire
+                                                                Date obligatoire
                                                             </small>
+                                                        </div>
+
+                                                        <div class="mt-2">
+                                                            <label :for="'doc_' + certificat.id"
+                                                                class="block text-xs text-gray-600 mb-1">
+                                                                Document (optionnel)
+                                                            </label>
+                                                            <div class="flex items-center gap-2">
+                                                                <FileUpload :id="'doc_' + certificat.id" mode="basic"
+                                                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                                                    chooseLabel="📎 Choisir" customUpload
+                                                                    @select="(event) => onFileSelect(certificat.id, event)"
+                                                                    :disabled="!form.certificats[certificat.id].obtenu"
+                                                                    class="w-full" />
+                                                                <Button v-if="form.certificats[certificat.id].document"
+                                                                    icon="pi pi-times"
+                                                                    class="p-button-rounded p-button-danger p-button-text"
+                                                                    size="small" @click="removeDocument(certificat.id)"
+                                                                    title="Supprimer le document" />
+                                                            </div>
+                                                            <div v-if="form.certificats[certificat.id].document"
+                                                                class="text-xs text-green-600 flex items-center gap-1 mt-1">
+                                                                <i class="pi pi-check-circle"></i>
+                                                                <span class="truncate">{{
+                                                                    getFileName(form.certificats[certificat.id].document)
+                                                                }}</span>
+                                                                <span class="text-gray-400">({{
+                                                                    formatFileSize(form.certificats[certificat.id].document.size)
+                                                                }})</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -250,7 +346,6 @@
                                         </template>
                                     </Card>
 
-                                    <!-- Message si aucun grade sélectionné -->
                                     <div v-else class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                         <div class="flex items-center gap-2">
                                             <i class="pi pi-info-circle text-yellow-600"></i>
@@ -293,6 +388,7 @@ import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Toast from 'primevue/toast';
+import FileUpload from 'primevue/fileupload';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
@@ -302,7 +398,7 @@ const props = defineProps({
     },
     certificats: {
         type: Array,
-        default: () => []  // ← RENDU OPTIONNEL
+        default: () => []
     }
 });
 
@@ -310,6 +406,7 @@ const toast = useToast();
 const saving = ref(false);
 const errors = ref({});
 const dateErrors = ref({});
+const docErrors = ref({});
 
 const statutOptions = [
     { label: 'Actif', value: 'actif' },
@@ -320,19 +417,33 @@ const statutOptions = [
     { label: 'Stage', value: 'stage' }
 ];
 
+const sexeOptions = [
+    { label: 'M', value: 'M' },
+    { label: 'F', value: 'F' }
+];
+
+const groupeSanguinOptions = [
+    { label: 'A+', value: 'A+' },
+    { label: 'A-', value: 'A-' },
+    { label: 'B+', value: 'B+' },
+    { label: 'B-', value: 'B-' },
+    { label: 'AB+', value: 'AB+' },
+    { label: 'AB-', value: 'AB-' },
+    { label: 'O+', value: 'O+' },
+    { label: 'O-', value: 'O-' }
+];
+
 const formationsOfficiers = [
-    'APLI', 'CFCU', 'CEM', 'Certificat État-major',
-    'Certificat d\'état-major', 'École d\'État-Major', 'ESM',
+    'APLI', 'CFCU', 'Certificat État-major',
+    'Certificat d\'état-major', 'École d\'État-Major', 'EEM',
     'Cours supérieur d\'état-major', 'École de guerre',
     'Brevet Supérieur de Second Degré',
     'École de guerre / Brevet Supérieur de Second Degré',
-    'Cour d\'Application', 'Cour des Futurs Commandants d\'Unité',
-    'Cour d\'état-major'
+    'Cour d\'Application', 'Cour des Futurs Commandants d\'Unité'
 ];
 
 const officierTypes = ['officier général', 'officier supérieur', 'officier subalterne'];
 
-// Formulaire avec les trois champs
 const form = reactive({
     matricule: '',
     grade_actuel: null,
@@ -345,26 +456,30 @@ const form = reactive({
     position_actuelle: '',
     fonction_passee: '',
     fonction_actuelle: '',
+    telephone: '',
     statut: 'actif',
+    sexe: null,
+    groupe_sanguin: null,
+    personne_a_contacter: '',
+    telephone_personne_contacter: '',
     a_permis_conduire: false,
     a_fait_justice: false,
     a_fait_discipline: false,
     certificats: {}
 });
 
-// Initialisation des certificats (avec vérification)
 if (props.certificats && Array.isArray(props.certificats)) {
     props.certificats.forEach(certificat => {
         form.certificats[certificat.id] = {
             obtenu: false,
-            date_obtention: null
+            date_obtention: null,
+            document: null
         };
     });
 } else {
     form.certificats = {};
 }
 
-// Fonctions (inchangées)
 const estFormationOfficier = (certificat) => {
     const nom = certificat.nom_certificat;
     const niveau = certificat.niveau_certificat;
@@ -400,7 +515,9 @@ watch(() => form.grade_actuel, (newGrade, oldGrade) => {
                         if (form.certificats[certifId].obtenu) {
                             form.certificats[certifId].obtenu = false;
                             form.certificats[certifId].date_obtention = null;
+                            form.certificats[certifId].document = null;
                             dateErrors.value[certifId] = false;
+                            docErrors.value[certifId] = false;
                         }
                     }
                 });
@@ -417,19 +534,26 @@ watch(() => form.grade_actuel, (newGrade, oldGrade) => {
 
 watch(() => form.certificats, (newVal) => {
     Object.keys(newVal).forEach(certifId => {
-        if (!newVal[certifId].obtenu) dateErrors.value[certifId] = false;
+        if (!newVal[certifId].obtenu) {
+            dateErrors.value[certifId] = false;
+            docErrors.value[certifId] = false;
+        }
     });
 }, { deep: true });
 
 const getNiveauStyle = (niveau) => {
     const styles = {
+        'BE':   { background: '#e0f2fe', color: '#0369a1' },
         'CAT1': { background: '#7dd3fc', color: '#0369a1' },
         'CAT2': { background: '#38bdf8', color: '#075985' },
-        'CIA': { background: '#22d3ee', color: '#0e7490' },
-        'BSP': { background: '#fdba74', color: '#c2410c' },
-        'BSG': { background: '#fca5a5', color: '#b91c1c' },
-        'BSC': { background: '#9ca3af', color: '#374151' },
-        'CSG': { background: '#c4b5fd', color: '#5b21b6' }
+        'CIA':  { background: '#22d3ee', color: '#0e7490' },
+        'BA1':  { background: '#a7f3d0', color: '#047857' },
+        'BA2':  { background: '#6ee7b7', color: '#065f46' },
+        'BMP1': { background: '#fde68a', color: '#b45309' },
+        'BMP2': { background: '#fcd34d', color: '#92400e' },
+        'BS':   { background: '#fed7aa', color: '#c2410c' },
+        'CT1':  { background: '#ddd6fe', color: '#6d28d9' },
+        'CT2':  { background: '#c4b5fd', color: '#5b21b6' },
     };
     return styles[niveau] || { background: '#bae6fd', color: '#0369a1' };
 };
@@ -437,10 +561,56 @@ const getNiveauStyle = (niveau) => {
 const onCertificatChange = (certifId) => {
     if (!form.certificats[certifId].obtenu) {
         form.certificats[certifId].date_obtention = null;
+        form.certificats[certifId].document = null;
         dateErrors.value[certifId] = false;
+        docErrors.value[certifId] = false;
     } else {
-        if (!form.certificats[certifId].date_obtention) dateErrors.value[certifId] = true;
+        if (!form.certificats[certifId].date_obtention) {
+            dateErrors.value[certifId] = true;
+        }
     }
+};
+
+const onFileSelect = (certifId, event) => {
+    const file = event.files[0];
+    if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+            toast.add({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Le fichier est trop volumineux. Maximum 5MB.',
+                life: 3000
+            });
+            return;
+        }
+        form.certificats[certifId].document = file;
+        docErrors.value[certifId] = false;
+        toast.add({
+            severity: 'success',
+            summary: 'Fichier ajouté',
+            detail: `"${file.name}" sélectionné`,
+            life: 2000
+        });
+    }
+};
+
+const removeDocument = (certifId) => {
+    form.certificats[certifId].document = null;
+    docErrors.value[certifId] = false;
+};
+
+const getFileName = (file) => {
+    if (!file) return '';
+    if (typeof file === 'string') return file.split('/').pop();
+    return file.name;
+};
+
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 const validateDates = () => {
@@ -469,29 +639,45 @@ const submitForm = () => {
     saving.value = true;
     errors.value = {};
 
-    const formData = {
-        ...form,
-        date_naissance: form.date_naissance ? formatDateForServer(form.date_naissance) : null,
-        date_entree_service: form.date_entree_service ? formatDateForServer(form.date_entree_service) : null,
-        date_derniere_promotion: form.date_derniere_promotion ? formatDateForServer(form.date_derniere_promotion) : null,
-        position_actuelle: form.position_actuelle,
-        fonction_passee: form.fonction_passee,
-        fonction_actuelle: form.fonction_actuelle,
-        certificats: {}
-    };
+    const formData = new FormData();
+
+    const textFields = [
+        'matricule', 'nom', 'prenom', 'grade_actuel', 'specialite',
+        'position_actuelle', 'fonction_passee', 'fonction_actuelle',
+        'telephone', 'statut',
+        'sexe', 'groupe_sanguin', 'personne_a_contacter', 'telephone_personne_contacter'
+    ];
+
+    textFields.forEach(field => {
+        formData.append(field, (form[field] !== null && form[field] !== undefined) ? form[field] : '');
+    });
+
+    const dateFields = ['date_naissance', 'date_entree_service', 'date_derniere_promotion'];
+    dateFields.forEach(field => {
+        formData.append(field, form[field] ? formatDateForServer(form[field]) : '');
+    });
+
+    formData.append('a_permis_conduire', form.a_permis_conduire ? '1' : '0');
+    formData.append('a_fait_justice', form.a_fait_justice ? '1' : '0');
+    formData.append('a_fait_discipline', form.a_fait_discipline ? '1' : '0');
 
     Object.keys(form.certificats).forEach(certifId => {
-        if (form.certificats[certifId].obtenu) {
-            formData.certificats[certifId] = {
-                obtenu: true,
-                date_obtention: form.certificats[certifId].date_obtention
-                    ? formatDateForServer(form.certificats[certifId].date_obtention)
-                    : null
-            };
+        const certData = form.certificats[certifId];
+        formData.append(`certificats[${certifId}][obtenu]`, certData.obtenu ? '1' : '0');
+
+        if (certData.obtenu) {
+            if (certData.date_obtention) {
+                formData.append(`certificats[${certifId}][date_obtention]`,
+                    formatDateForServer(certData.date_obtention));
+            }
+            if (certData.document) {
+                formData.append(`certificats[${certifId}][document]`, certData.document);
+            }
         }
     });
 
     router.post(route('militaires.store'), formData, {
+        forceFormData: true,
         onSuccess: () => {
             saving.value = false;
             toast.add({
@@ -518,8 +704,12 @@ const submitForm = () => {
 };
 
 const formatDateForServer = (date) => {
-    if (!date) return null;
+    if (!date) return '';
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date;
+    }
     const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -567,12 +757,36 @@ const cancel = () => {
     font-weight: 500;
 }
 
+:deep(.p-fileupload) {
+    width: 100%;
+}
+
+:deep(.p-fileupload .p-button) {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+}
+
+:deep(.p-datepicker .p-inputtext) {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.5rem;
+}
+
 .text-sky-500 {
     color: #0ea5e9;
 }
 
 .text-sky-600 {
     color: #0284c7;
+}
+
+.text-amber-500 {
+    color: #f59e0b;
+}
+
+.text-red-500 {
+    color: #ef4444;
 }
 
 .bg-sky-400 {
@@ -598,5 +812,20 @@ const cancel = () => {
 
 .border:hover {
     border-color: #7dd3fc;
+}
+
+.truncate {
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+:deep(.p-button.p-button-text) {
+    padding: 0.2rem;
+}
+
+.bg-gray-50 {
+    background-color: #f9fafb;
 }
 </style>
