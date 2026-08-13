@@ -9,11 +9,6 @@ class Certificat extends Model
 {
     use HasFactory;
 
-    /**
-     * Les attributs qui sont assignables en masse.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'nom_certificat',
         'niveau_certificat',
@@ -24,14 +19,20 @@ class Certificat extends Model
         'duree_certificat_precedent'
     ];
 
-    /**
-     * Les attributs qui doivent être convertis (castés).
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'conditions' => 'array', // Convertit le tableau PHP en JSON pour MySQL/SQLite à l'écriture, et inversement à la lecture
+        'conditions' => 'array',
         'anciennete_requise' => 'integer',
         'duree_certificat_precedent' => 'integer',
     ];
+
+    /**
+     * Relation Many-to-Many avec Militaire
+     * ✅ Table pivot : militaire_certificat
+     */
+    public function militaires()
+    {
+        return $this->belongsToMany(Militaire::class, 'certificat_militaire')
+                    ->withPivot('date_obtention')
+                    ->withTimestamps();
+    }
 }

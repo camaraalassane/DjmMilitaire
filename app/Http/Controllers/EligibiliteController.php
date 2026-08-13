@@ -79,14 +79,15 @@ class EligibiliteController extends Controller
     private function getFormationsListe()
     {
         return [
+            ['id' => 'BE', 'nom' => 'BE (Brevet Élémentaire)'],
+            ['id' => 'CT1', 'nom' => 'CT1 (Certificat Technique N1)'],
             ['id' => 'CAT1', 'nom' => 'CAT1 (Certificat Technique Niveau 1)'],
             ['id' => 'CAT2', 'nom' => 'CAT2 (Certificat Technique Niveau 2)'],
-            ['id' => 'CIA', 'nom' => 'CIA (Certificat Instruction d\'Armes)'],
-            ['id' => 'BA1', 'nom' => 'BA1 (Brevet Aptitude Niveau 1)'],
-            ['id' => 'BA2', 'nom' => 'BA2 (Brevet Aptitude Niveau 2)'],
+            ['id' => 'CIA', 'nom' => 'CIA (Certificat Interarmes)'],
+            ['id' => 'BA1', 'nom' => 'BA1 (Brevet d\'Arme N1)'],
+            ['id' => 'BA2', 'nom' => 'BA2 (Brevet d\'Arme N2)'],
             ['id' => 'APLI', 'nom' => 'APLI (Cour d\'Application)'],
             ['id' => 'CFCU', 'nom' => 'CFCU (Cour des Futurs Commandants)'],
-            ['id' => 'CEM', 'nom' => 'CEM (Cour d\'État-Major)'],
             ['id' => 'CERT_EM', 'nom' => 'Certificat d\'État-Major'],
             ['id' => 'ECOLE_GUERRE', 'nom' => 'École de Guerre'],
         ];

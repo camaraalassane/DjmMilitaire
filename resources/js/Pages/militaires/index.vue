@@ -5,18 +5,21 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 px-4 md:px-0">
                 <h2 class="font-semibold text-xl text-sky-600">Gestion des Militaires</h2>
                 <div class="flex flex-wrap gap-3">
-                    <button @click="createMilitaire" class="px-4 py-2 bg-white text-sky-600 rounded-lg font-medium hover:bg-sky-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
+                    <button @click="createMilitaire"
+                        class="px-4 py-2 bg-white text-sky-600 rounded-lg font-medium hover:bg-sky-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
                         <i class="pi pi-plus text-sm md:text-base"></i> Nouveau militaire
                     </button>
-                    <button @click="importExcel" class="px-4 py-2 bg-white text-emerald-600 rounded-lg font-medium hover:bg-emerald-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
+                    <button @click="importExcel"
+                        class="px-4 py-2 bg-white text-emerald-600 rounded-lg font-medium hover:bg-emerald-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
                         <i class="pi pi-upload text-sm md:text-base"></i> Importer Excel
                     </button>
-                    <button @click="openExportModal" class="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
+                    <button @click="openExportModal"
+                        class="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-sm text-sm md:text-base">
                         <i class="pi pi-file-excel text-sm md:text-base"></i> Exporter
                     </button>
                 </div>
             </div>
-       
+
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Statistiques -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -46,40 +49,27 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
                                 <span class="p-input-icon-left w-full">
                                     <i class="pi pi-search" />
-                                    <InputText v-model="filters.search" 
-                                              placeholder="Rechercher par nom, prénom ou matricule..." 
-                                              class="w-full"
-                                              @input="onSearchInput" />
+                                    <InputText v-model="filters.search" placeholder="Rechercher..." class="w-full"
+                                        @input="onSearchInput" />
                                 </span>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Grade</label>
-                                <Select v-model="filters.grade" 
-                                        :options="gradeOptions" 
-                                        optionLabel="label" 
-                                        optionValue="value"
-                                        placeholder="Tous les grades"
-                                        class="w-full"
-                                        showClear
-                                        @change="onFilterChange" />
+                                <Select v-model="filters.grade" :options="gradeOptions" optionLabel="label"
+                                    optionValue="value" placeholder="Tous les grades" class="w-full" showClear
+                                    @change="onFilterChange" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                                <Select v-model="filters.statut" 
-                                        :options="statutOptions" 
-                                        optionLabel="label" 
-                                        optionValue="value"
-                                        placeholder="Tous les statuts"
-                                        class="w-full"
-                                        showClear
-                                        @change="onFilterChange" />
+                                <Select v-model="filters.statut" :options="statutOptions" optionLabel="label"
+                                    optionValue="value" placeholder="Tous les statuts" class="w-full" showClear
+                                    @change="onFilterChange" />
                             </div>
                             <div>
                                 <div class="h-7 mb-1"></div>
-                                <Button label="Réinitialiser" 
-                                        icon="pi pi-times"
-                                        class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white w-full md:w-auto"
-                                        @click="resetFilters" />
+                                <Button label="Réinitialiser" icon="pi pi-times"
+                                    class="p-button-sm bg-gray-500 hover:bg-gray-600 border-gray-500 text-white w-full md:w-auto"
+                                    @click="resetFilters" />
                             </div>
                         </div>
                     </div>
@@ -88,97 +78,113 @@
                 <!-- DataTable -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-4 md:p-6">
-                        <DataTable :value="militaires.data" 
-                                   stripedRows 
-                                   responsiveLayout="scroll"
-                                   :loading="loading"
-                                   paginator
-                                   lazy
-                                   :rows="militaires.per_page"
-                                   :totalRecords="militaires.total"
-                                   @page="onPageChange"
-                                   class="p-datatable-sm">
-                            
-                            <Column field="matricule" header="Matricule">
+                        <DataTable :value="militaires.data" stripedRows responsiveLayout="scroll" :loading="loading"
+                            paginator lazy :rows="militaires.per_page" :totalRecords="militaires.total"
+                            @page="onPageChange" class="p-datatable-sm">
+
+                            <!-- Colonne Matricule -->
+                            <Column field="matricule" header="Matricule" style="min-width: 100px;">
                                 <template #body="slotProps">
-                                    <Tag :value="slotProps.data.matricule" style="background: #bae6fd; color: #0369a1;" />
+                                    <Tag :value="slotProps.data.matricule"
+                                        style="background: #bae6fd; color: #0369a1;" />
                                 </template>
                             </Column>
 
-                            <Column field="nom" header="Nom & Prénom">
+                            <!-- Colonne Nom & Prénom -->
+                            <Column field="nom" header="Nom & Prénom" style="min-width: 160px;">
                                 <template #body="slotProps">
                                     <div class="flex items-center gap-2">
                                         <Button :label="slotProps.data.nom + ' ' + slotProps.data.prenom"
-                                                class="p-button-link p-0 text-sky-600 hover:text-sky-700 font-medium text-left"
-                                                @click="viewMilitaire(slotProps.data.id)" />
-                                        <Badge v-if="slotProps.data.alertes_count > 0" value="!" style="background: #f97316; color: white;" class="ml-2" />
+                                            class="p-button-link p-0 text-sky-600 hover:text-sky-700 font-medium text-left"
+                                            @click="viewMilitaire(slotProps.data.id)" />
+                                        <Badge v-if="slotProps.data.alertes_count > 0" value="!"
+                                            style="background: #f97316; color: white;" class="ml-2" />
                                     </div>
                                 </template>
                             </Column>
 
-                            <Column field="grade_actuel" header="Grade">
+                            <!-- Colonne Grade -->
+                            <Column field="grade_actuel" header="Grade" style="min-width: 110px;">
                                 <template #body="slotProps">
-                                    <Tag :value="slotProps.data.grade_actuel" style="background: #7dd3fc; color: #0369a1;" />
+                                    <Tag :value="slotProps.data.grade_actuel"
+                                        style="background: #7dd3fc; color: #0369a1;" />
                                 </template>
                             </Column>
 
-                            <Column field="date_entree_service" header="Entrée service">
+                            <!-- Colonne Téléphone ✅ NOUVEAU -->
+                            <Column field="telephone" header="Téléphone" style="min-width: 120px;">
+                                <template #body="slotProps">
+                                    <span class="text-sm">{{ slotProps.data.telephone || '-' }}</span>
+                                </template>
+                            </Column>
+
+                            <!-- Colonne Entrée service -->
+                            <Column field="date_entree_service" header="Entrée service" style="min-width: 110px;">
                                 <template #body="slotProps">
                                     <span class="text-sm">{{ slotProps.data.date_entree_service || '-' }}</span>
                                 </template>
                             </Column>
 
-                            <Column header="Âge">
+                            <!-- Colonne Âge -->
+                            <Column header="Âge" style="min-width: 70px;">
                                 <template #body="slotProps">
-                                    <Tag :value="slotProps.data.age + ' ans'" style="background: #7dd3fc; color: #0369a1;" />
+                                    <Tag :value="slotProps.data.age + ' ans'"
+                                        style="background: #7dd3fc; color: #0369a1;" />
                                 </template>
                             </Column>
 
-                            <Column header="Ancienneté">
+                            <!-- Colonne Ancienneté -->
+                            <Column header="Ancienneté" style="min-width: 90px;">
                                 <template #body="slotProps">
                                     <span class="text-sm">{{ formatAnciennete(slotProps.data.anciennete) }}</span>
                                 </template>
                             </Column>
 
-                            <Column header="Statut">
+                            <!-- Colonne Statut -->
+                            <Column header="Statut" style="min-width: 90px;">
                                 <template #body="slotProps">
-                                    <Tag :value="slotProps.data.statut" :style="getStatutStyle(slotProps.data.statut)" class="text-xs" />
+                                    <Tag :value="slotProps.data.statut" :style="getStatutStyle(slotProps.data.statut)"
+                                        class="text-xs" />
                                 </template>
                             </Column>
 
-                            <Column field="position_actuelle" header="Position">
+                            <!-- Colonne Position -->
+                            <Column field="position_actuelle" header="Position" style="min-width: 120px;">
                                 <template #body="slotProps">
-                                    <span class="text-sm">{{ slotProps.data.position_actuelle || '-' }}</span>
+                                    <span class="text-sm truncate block max-w-[100px]">{{
+                                        slotProps.data.position_actuelle || '-' }}</span>
                                 </template>
                             </Column>
 
-                            <Column field="fonction_passee" header="Fonction passée">
+                            <!-- Colonne Fonction passée -->
+                            <Column field="fonction_passee" header="Fonction passée" style="min-width: 120px;">
                                 <template #body="slotProps">
-                                    <span class="text-sm">{{ slotProps.data.fonction_passee || '-' }}</span>
+                                    <span class="text-sm truncate block max-w-[100px]">{{ slotProps.data.fonction_passee
+                                        || '-' }}</span>
                                 </template>
                             </Column>
 
-                            <Column field="fonction_actuelle" header="Fonction actuelle">
+                            <!-- Colonne Fonction actuelle -->
+                            <Column field="fonction_actuelle" header="Fonction actuelle" style="min-width: 120px;">
                                 <template #body="slotProps">
-                                    <span class="text-sm">{{ slotProps.data.fonction_actuelle || '-' }}</span>
+                                    <span class="text-sm truncate block max-w-[100px]">{{
+                                        slotProps.data.fonction_actuelle || '-' }}</span>
                                 </template>
                             </Column>
 
-                            <Column header="Actions">
+                            <!-- Colonne Actions -->
+                            <Column header="Actions" style="min-width: 110px;">
                                 <template #body="slotProps">
                                     <div class="flex gap-1">
-                                        <Button icon="pi pi-eye" 
-                                                class="p-button-rounded p-button-text p-button-sm text-sky-500 hover:text-sky-600"
-                                                @click="viewMilitaire(slotProps.data.id)"
-                                                v-tooltip.top="'Voir'" />
-                                        <Button icon="pi pi-pencil" 
-                                                class="p-button-rounded p-button-text p-button-sm text-amber-500 hover:text-amber-600"
-                                                @click="editMilitaire(slotProps.data.id)"
-                                                v-tooltip.top="'Modifier'" />
-                                        <Button icon="pi pi-trash" 
-                                                class="p-button-rounded p-button-text p-button-sm text-red-500 hover:text-red-600"
-                                                @click="confirmDelete(slotProps.data)"
-                                                v-tooltip.top="'Supprimer'" />
+                                        <Button icon="pi pi-eye"
+                                            class="p-button-rounded p-button-text p-button-sm text-sky-500 hover:text-sky-600"
+                                            @click="viewMilitaire(slotProps.data.id)" v-tooltip.top="'Voir'" />
+                                        <Button icon="pi pi-pencil"
+                                            class="p-button-rounded p-button-text p-button-sm text-amber-500 hover:text-amber-600"
+                                            @click="editMilitaire(slotProps.data.id)" v-tooltip.top="'Modifier'" />
+                                        <Button icon="pi pi-trash"
+                                            class="p-button-rounded p-button-text p-button-sm text-red-500 hover:text-red-600"
+                                            @click="confirmDelete(slotProps.data)" v-tooltip.top="'Supprimer'" />
                                     </div>
                                 </template>
                             </Column>
@@ -196,42 +202,37 @@
         </div>
 
         <!-- Dialog suppression -->
-        <Dialog v-model:visible="deleteDialogVisible" header="Confirmation" :modal="true" :style="{ width: '90%', maxWidth: '400px' }" class="p-fluid">
+        <Dialog v-model:visible="deleteDialogVisible" header="Confirmation" :modal="true"
+            :style="{ width: '90%', maxWidth: '400px' }" class="p-fluid">
             <div class="flex items-center gap-3 mb-4">
                 <i class="pi pi-exclamation-triangle text-3xl text-amber-500"></i>
-                <p class="text-gray-700 text-sm">Êtes-vous sûr de vouloir supprimer le militaire <strong>{{ militaireToDelete?.nom }} {{ militaireToDelete?.prenom }}</strong> ?</p>
+                <p class="text-gray-700 text-sm">Êtes-vous sûr de vouloir supprimer le militaire <strong>{{
+                    militaireToDelete?.nom }} {{ militaireToDelete?.prenom }}</strong> ?</p>
             </div>
             <template #footer>
                 <div class="flex justify-end gap-2">
-                    <Button label="Non" icon="pi pi-times" class="p-button-text text-gray-500 hover:text-gray-700" @click="deleteDialogVisible = false" />
-                    <Button label="Oui" icon="pi pi-check" class="bg-red-500 hover:bg-red-600 border-red-500 text-white" @click="deleteMilitaire" />
+                    <Button label="Non" icon="pi pi-times" class="p-button-text text-gray-500 hover:text-gray-700"
+                        @click="deleteDialogVisible = false" />
+                    <Button label="Oui" icon="pi pi-check" class="bg-red-500 hover:bg-red-600 border-red-500 text-white"
+                        @click="deleteMilitaire" />
                 </div>
             </template>
         </Dialog>
 
         <!-- Modal d'export -->
-        <Dialog v-model:visible="exportDialogVisible" header="Exporter la liste" :modal="true" :style="{ width: '90%', maxWidth: '500px' }" class="p-fluid">
+        <Dialog v-model:visible="exportDialogVisible" header="Exporter la liste" :modal="true"
+            :style="{ width: '90%', maxWidth: '500px' }" class="p-fluid">
             <div class="space-y-4">
                 <p class="text-sm text-gray-600">Choisissez les options d'export :</p>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Grade</label>
-                    <Select v-model="exportFilters.grade" 
-                            :options="gradeOptions" 
-                            optionLabel="label" 
-                            optionValue="value"
-                            placeholder="Tous les grades"
-                            class="w-full"
-                            showClear />
+                    <Select v-model="exportFilters.grade" :options="gradeOptions" optionLabel="label"
+                        optionValue="value" placeholder="Tous les grades" class="w-full" showClear />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                    <Select v-model="exportFilters.statut" 
-                            :options="statutOptions" 
-                            optionLabel="label" 
-                            optionValue="value"
-                            placeholder="Tous les statuts"
-                            class="w-full"
-                            showClear />
+                    <Select v-model="exportFilters.statut" :options="statutOptions" optionLabel="label"
+                        optionValue="value" placeholder="Tous les statuts" class="w-full" showClear />
                 </div>
                 <div class="flex items-center gap-2">
                     <Checkbox v-model="exportFilters.useCurrentFilters" binary />
@@ -244,8 +245,11 @@
             </div>
             <template #footer>
                 <div class="flex justify-end gap-2">
-                    <Button label="Annuler" icon="pi pi-times" class="p-button-text text-gray-500 hover:text-gray-700" @click="exportDialogVisible = false" />
-                    <Button label="Exporter" icon="pi pi-file-excel" class="bg-green-500 hover:bg-green-600 border-green-500 text-white" :loading="exporting" @click="exportMilitaires" />
+                    <Button label="Annuler" icon="pi pi-times" class="p-button-text text-gray-500 hover:text-gray-700"
+                        @click="exportDialogVisible = false" />
+                    <Button label="Exporter" icon="pi pi-file-excel"
+                        class="bg-green-500 hover:bg-green-600 border-green-500 text-white" :loading="exporting"
+                        @click="exportMilitaires" />
                 </div>
             </template>
         </Dialog>
@@ -327,6 +331,7 @@ const debouncedSearch = debounce(() => {
 const onSearchInput = () => {
     debouncedSearch();
 };
+
 const onFilterChange = () => {
     loadMilitaires(1);
 };
@@ -371,6 +376,7 @@ const resetFilters = () => {
 };
 
 const onPageChange = (event) => changePage(event.page + 1);
+
 const changePage = (page) => {
     if (page >= 1 && page <= props.militaires.last_page) loadMilitaires(page);
 };
@@ -388,21 +394,8 @@ const openExportModal = () => {
     exportDialogVisible.value = true;
 };
 
-// ===== CORRECTION EXPORT =====
 const exportMilitaires = () => {
     exporting.value = true;
-
-    console.log('🔍 Valeur des filtres actuels :', {
-        search: filters.search,
-        grade: filters.grade,
-        statut: filters.statut
-    });
-    console.log('🔍 Valeur des filtres export :', {
-        grade: exportFilters.grade,
-        statut: exportFilters.statut,
-        useCurrentFilters: exportFilters.useCurrentFilters,
-        includeSearch: exportFilters.includeSearch
-    });
 
     let params = {};
 
@@ -416,9 +409,8 @@ const exportMilitaires = () => {
         if (exportFilters.statut) params.statut = exportFilters.statut;
     }
 
-    // Fallback : si aucun paramètre, on prend ceux de la modal
+    // Fallback
     if (Object.keys(params).length === 0) {
-        console.warn('⚠️ Aucun paramètre trouvé, utilisation des filtres de la modal par défaut');
         if (exportFilters.grade) params.grade = exportFilters.grade;
         if (exportFilters.statut) params.statut = exportFilters.statut;
         if (exportFilters.includeSearch && filters.search) params.search = filters.search;
@@ -432,8 +424,6 @@ const exportMilitaires = () => {
     const baseUrl = '/militaires/export';
     const queryString = new URLSearchParams(params).toString();
     const url = baseUrl + (queryString ? '?' + queryString : '');
-
-    console.log('📤 URL finale d\'export :', url);
 
     window.open(url, '_blank');
 
@@ -463,29 +453,259 @@ const deleteMilitaire = () => {
 </script>
 
 <style scoped>
-:deep(.p-datatable) { font-size: 0.875rem; }
-:deep(.p-datatable .p-datatable-tbody > tr:hover) { background-color: #f0f9ff; }
-:deep(.p-tag) { padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-weight: 500; }
-:deep(.p-button.p-button-sm) { font-size: 0.75rem; padding: 0.375rem 0.75rem; }
-:deep(.p-button.p-button-rounded.p-button-text) { width: 1.75rem; height: 1.75rem; }
-@media (max-width: 768px) {
-    :deep(.p-datatable .p-datatable-thead > tr > th) { font-size: 0.75rem; padding: 0.5rem; }
-    :deep(.p-datatable .p-datatable-tbody > tr > td) { font-size: 0.75rem; padding: 0.5rem; }
-    :deep(.p-tag) { font-size: 0.65rem; padding: 0.2rem 0.4rem; }
+/* ============================================================
+   STYLES GÉNÉRAUX
+   ============================================================ */
+.text-sky-600 {
+    color: #0284c7;
 }
-.text-sky-600 { color: #0284c7; }
-.text-sky-500 { color: #0ea5e9; }
-.text-emerald-600 { color: #059669; }
-.text-amber-600 { color: #d97706; }
-.text-red-600 { color: #dc2626; }
-.bg-sky-500 { background-color: #0ea5e9; }
-.hover:bg-sky-600:hover { background-color: #0284c7; }
-.border-sky-500 { border-color: #0ea5e9; }
-.bg-gray-500 { background-color: #6b7280; }
-.hover:bg-gray-600:hover { background-color: #4b5563; }
-.border-gray-500 { border-color: #6b7280; }
-.bg-red-500 { background-color: #ef4444; }
-.hover:bg-red-600:hover { background-color: #dc2626; }
-.border-red-500 { border-color: #ef4444; }
-.text-white { color: white; }
+
+.text-sky-500 {
+    color: #0ea5e9;
+}
+
+.text-emerald-600 {
+    color: #059669;
+}
+
+.text-amber-600 {
+    color: #d97706;
+}
+
+.text-red-600 {
+    color: #dc2626;
+}
+
+.text-white {
+    color: white;
+}
+
+.bg-sky-500 {
+    background-color: #0ea5e9;
+}
+
+.hover\:bg-sky-600:hover {
+    background-color: #0284c7;
+}
+
+.border-sky-500 {
+    border-color: #0ea5e9;
+}
+
+.bg-gray-500 {
+    background-color: #6b7280;
+}
+
+.hover\:bg-gray-600:hover {
+    background-color: #4b5563;
+}
+
+.border-gray-500 {
+    border-color: #6b7280;
+}
+
+.bg-red-500 {
+    background-color: #ef4444;
+}
+
+.hover\:bg-red-600:hover {
+    background-color: #dc2626;
+}
+
+.border-red-500 {
+    border-color: #ef4444;
+}
+
+.bg-green-500 {
+    background-color: #22c55e;
+}
+
+.hover\:bg-green-600:hover {
+    background-color: #16a34a;
+}
+
+.border-green-500 {
+    border-color: #22c55e;
+}
+
+/* ============================================================
+   DATATABLE
+   ============================================================ */
+:deep(.p-datatable) {
+    font-size: 0.875rem;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+    background: #f8fafc;
+    color: #1e293b;
+    font-weight: 600;
+    padding: 0.75rem 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+    padding: 0.6rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:hover) {
+    background-color: #f0f9ff;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:nth-child(even)) {
+    background-color: #fafbfc;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:nth-child(even):hover) {
+    background-color: #f0f9ff;
+}
+
+/* ============================================================
+   TAGS ET BADGES
+   ============================================================ */
+:deep(.p-tag) {
+    padding: 0.25rem 0.6rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+:deep(.p-tag .p-tag-value) {
+    font-size: 0.75rem;
+}
+
+:deep(.p-badge) {
+    font-size: 0.65rem;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    line-height: 1.2rem;
+    border-radius: 50%;
+}
+
+/* ============================================================
+   BOUTONS
+   ============================================================ */
+:deep(.p-button.p-button-sm) {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+:deep(.p-button.p-button-rounded.p-button-text) {
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
+}
+
+:deep(.p-button.p-button-link) {
+    font-size: 0.875rem;
+}
+
+/* ============================================================
+   INPUTS ET SELECT
+   ============================================================ */
+:deep(.p-inputtext) {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+}
+
+:deep(.p-select) {
+    font-size: 0.875rem;
+}
+
+:deep(.p-select .p-select-label) {
+    padding: 0.5rem 0.75rem;
+}
+
+:deep(.p-input-icon-left > i) {
+    left: 0.75rem;
+}
+
+:deep(.p-input-icon-left > .p-inputtext) {
+    padding-left: 2.5rem;
+}
+
+/* ============================================================
+   DIALOG
+   ============================================================ */
+:deep(.p-dialog .p-dialog-header) {
+    padding: 1.25rem 1.5rem 0.75rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+:deep(.p-dialog .p-dialog-content) {
+    padding: 1.25rem 1.5rem;
+}
+
+:deep(.p-dialog .p-dialog-footer) {
+    padding: 0.75rem 1.5rem 1.25rem 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+    :deep(.p-datatable .p-datatable-thead > tr > th) {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.4rem;
+        white-space: nowrap;
+    }
+
+    :deep(.p-datatable .p-datatable-tbody > tr > td) {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.4rem;
+    }
+
+    :deep(.p-tag) {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.35rem;
+    }
+
+    :deep(.p-button.p-button-rounded.p-button-text) {
+        width: 1.5rem;
+        height: 1.5rem;
+        min-width: 1.5rem;
+    }
+
+    :deep(.p-button.p-button-rounded.p-button-text .p-button-icon) {
+        font-size: 0.7rem;
+    }
+
+    .text-xl {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    :deep(.p-datatable .p-datatable-thead > tr > th) {
+        font-size: 0.6rem;
+        padding: 0.3rem 0.3rem;
+    }
+
+    :deep(.p-datatable .p-datatable-tbody > tr > td) {
+        font-size: 0.6rem;
+        padding: 0.3rem 0.3rem;
+    }
+
+    :deep(.p-tag) {
+        font-size: 0.5rem;
+        padding: 0.1rem 0.25rem;
+    }
+}
+
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.max-w-100px {
+    max-width: 100px;
+}
 </style>
