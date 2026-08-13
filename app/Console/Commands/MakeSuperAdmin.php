@@ -34,7 +34,7 @@ class MakeSuperAdmin extends Command
             return;
         }
 
-        $user->role = 'super_admin';
+        $user->role = 1;
         $user->save();
 
         $this->info("L'utilisateur {$user->name} ({$email}) est maintenant Super Administrateur.");

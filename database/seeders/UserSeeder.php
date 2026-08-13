@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
                 'email' => 'admin@fama.ml',
                 'email_verified_at' => null,
                 'password' => Hash::make('12345678'),
-                'role' => 'super_admin',
+                'role' => 1,
                 'remember_token' => 'Sqp6yeMhhYG4huHp5uqB0x37TLijmu2wYzgKGOOaeOjjo13qBOz0qBiPszwQ',
                 'created_at' => Carbon::parse('2026-03-07 02:41:21'),
                 'updated_at' => Carbon::parse('2026-03-07 02:41:21')
@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
                 'email' => 'ctt@gmail.com',
                 'email_verified_at' => null,
                 'password' => Hash::make('12345678'),
-                'role' => 'admin',
+                'role' => 2,
                 'remember_token' => null,
                 'created_at' => Carbon::parse('2026-03-17 09:12:35'),
                 'updated_at' => Carbon::parse('2026-03-17 09:12:35')

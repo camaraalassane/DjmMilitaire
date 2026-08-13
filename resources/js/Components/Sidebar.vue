@@ -134,7 +134,7 @@ const handleNavClick = () => {
 };
 
 const menuItems = computed(() => {
-    if (page.props.auth.user.role === 'super_admin') {
+    if (page.props.auth.user.role === 1) {
         return [
             { name: 'Utilisateurs', href: '/users', icon: 'pi pi-users' },
             { name: 'Journal d\'activités', href: '/activity-logs', icon: 'pi pi-history' }

@@ -38,14 +38,14 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => 'required|in:super_admin,admin',
+            'role' => 'required|in:1,2',
         ]);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => (int) $request->role,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Utilisateur créé avec succès.');
@@ -69,13 +69,13 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class.',email,'.$user->id,
-            'role' => 'required|in:super_admin,admin',
+            'role' => 'required|in:1,2',
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user->name = $request->name;
         $user->email = $request->email;
-        $user->role = $request->role;
+        $user->role = (int) $request->role;
         
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);

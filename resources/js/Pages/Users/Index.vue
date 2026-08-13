@@ -38,7 +38,7 @@
                                     <td class="border-b px-4 py-2">{{ user.name }}</td>
                                     <td class="border-b px-4 py-2">{{ user.email }}</td>
                                     <td class="border-b px-4 py-2">
-                                        <span v-if="user.role === 'super_admin'" class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded">Super Administrateur</span>
+                                        <span v-if="user.role === 1" class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded">Super Administrateur</span>
                                         <span v-else class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">Administrateur</span>
                                     </td>
                                     <td class="border-b px-4 py-2 text-right flex justify-end gap-2">

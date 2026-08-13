@@ -43,8 +43,8 @@
                                     :disabled="user.id === $page.props.auth.user.id"
                                 >
                                     <option value="" disabled>Sélectionner un rôle</option>
-                                    <option value="admin">Administrateur (Gestionnaire)</option>
-                                    <option value="super_admin">Super Administrateur (Gestion des accès)</option>
+                                    <option :value="2">Administrateur (Gestionnaire)</option>
+                                    <option :value="1">Super Administrateur (Gestion des accès)</option>
                                 </select>
                                 <InputError class="mt-2" :message="form.errors.role" />
                                 <p v-if="user.id === $page.props.auth.user.id" class="mt-1 text-sm text-gray-500">

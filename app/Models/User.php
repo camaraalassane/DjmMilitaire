@@ -27,17 +27,17 @@ class User extends Authenticatable
     /**
      * Check if user is a super admin
      */
-    public function isSuperAdmin(): bool
+    public function isSuperAdmin()
     {
-        return $this->role === 'super_admin';
+        return $this->role === 1;
     }
 
     /**
      * Check if user is an admin
      */
-    public function isAdmin(): bool
+    public function isAdmin()
     {
-        return $this->role === 'admin';
+        return $this->role === 2;
     }
 
     /**

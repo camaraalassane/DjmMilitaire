@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['super_admin', 'admin'])->default('admin')->after('password');
+            $table->tinyInteger('role')->default(2)->after('password')->comment('1: super_admin, 2: admin');
             if (Schema::hasColumn('users', 'is_admin')) {
                 $table->dropColumn('is_admin');
             }
