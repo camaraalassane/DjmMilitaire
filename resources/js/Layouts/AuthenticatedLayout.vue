@@ -21,11 +21,11 @@
 
                     <div class="flex items-center gap-4">
                         <!-- Lien Contrats -->
-                        <button @click="showContrats" class="relative text-white hover:text-sky-100" title="Contrats">
+                        <button v-if="$page.props.auth.user.role !== 'super_admin'" @click="showContrats" class="relative text-white hover:text-sky-100" title="Contrats">
                             <i class="pi pi-file text-xl"></i>
                         </button>
 
-                        <button @click="showNotifications" class="relative text-white hover:text-sky-100"
+                        <button v-if="$page.props.auth.user.role !== 'super_admin'" @click="showNotifications" class="relative text-white hover:text-sky-100"
                             title="Alertes">
                             <i class="pi pi-bell text-xl"></i>
                             <span v-if="alertesCount > 0"

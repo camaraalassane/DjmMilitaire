@@ -9,6 +9,7 @@ use App\Models\Alerte;
 use App\Models\Certificat;
 use App\Models\Contrat;
 use App\Models\CertificatDocument;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Inertia\Inertia;
@@ -155,6 +156,16 @@ class MilitaireController extends Controller
 
         $data = $this->extractData($request);
         $militaire = Militaire::create($data);
+
+        // Enregistrer l'action dans le journal
+        if (auth()->check()) {
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'Création',
+                'description' => 'A ajouté le militaire : ' . $militaire->nom . ' ' . $militaire->prenom . ' (' . $militaire->matricule . ')',
+                'ip_address' => request()->ip()
+            ]);
+        }
 
         if ($request->has('certificats')) {
             $this->syncCertificatsWithDocuments($militaire, $request->certificats);
@@ -344,13 +355,35 @@ class MilitaireController extends Controller
 
         $this->verifierAlertes($militaire);
 
+        // Enregistrer l'action dans le journal
+        if (auth()->check()) {
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'Modification',
+                'description' => 'A modifié le militaire : ' . $militaire->nom . ' ' . $militaire->prenom . ' (' . $militaire->matricule . ')',
+                'ip_address' => request()->ip()
+            ]);
+        }
+
         return redirect()->route('militaires.show', $militaire)
             ->with('success', 'Militaire mis à jour avec succès.');
     }
 
     public function destroy(Militaire $militaire)
     {
+        $nom_complet = $militaire->nom . ' ' . $militaire->prenom . ' (' . $militaire->matricule . ')';
         $militaire->delete();
+        
+        // Enregistrer l'action dans le journal
+        if (auth()->check()) {
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'Suppression',
+                'description' => 'A supprimé le militaire : ' . $nom_complet,
+                'ip_address' => request()->ip()
+            ]);
+        }
+        
         return redirect()->route('militaires.index')
             ->with('success', 'Militaire supprimé avec succès.');
     }

@@ -10,8 +10,8 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check() || !Auth::user()->is_admin) {
-            return redirect('/dashboard')->with('error', 'Accès non autorisé.');
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            return redirect('/dashboard')->with('error', 'Accès réservé aux administrateurs.');
         }
 
         return $next($request);

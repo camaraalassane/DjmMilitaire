@@ -133,15 +133,24 @@ const handleNavClick = () => {
     }
 };
 
-const menuItems = [
-    { name: 'Tableau de bord', href: '/dashboard', icon: 'pi pi-chart-line' },
-    { name: 'Militaires', href: '/militaires', icon: 'pi pi-users' },
-    { name: 'Alertes', href: '/alertes', icon: 'pi pi-bell' },
-    { name: 'Éligibilités', href: '/eligibilites', icon: 'pi pi-check-circle' },
-    { name: 'Contrats', href: '/contrats', icon: 'pi pi-file' },
-    { name: 'Grades', href: '/grades', icon: 'pi pi-star' },
-    { name: 'Certificats', href: '/certificats', icon: 'pi pi-file-pdf' }
-];
+const menuItems = computed(() => {
+    if (page.props.auth.user.role === 'super_admin') {
+        return [
+            { name: 'Utilisateurs', href: '/users', icon: 'pi pi-users' },
+            { name: 'Journal d\'activités', href: '/activity-logs', icon: 'pi pi-history' }
+        ];
+    } else {
+        return [
+            { name: 'Tableau de bord', href: '/dashboard', icon: 'pi pi-chart-line' },
+            { name: 'Militaires', href: '/militaires', icon: 'pi pi-users' },
+            { name: 'Alertes', href: '/alertes', icon: 'pi pi-bell' },
+            { name: 'Éligibilités', href: '/eligibilites', icon: 'pi pi-check-circle' },
+            { name: 'Contrats', href: '/contrats', icon: 'pi pi-file' },
+            { name: 'Grades', href: '/grades', icon: 'pi pi-star' },
+            { name: 'Certificats', href: '/certificats', icon: 'pi pi-file-pdf' }
+        ];
+    }
+});
 
 const isActive = (href) => {
     return window.location.pathname === href || window.location.pathname.startsWith(href + '/');
